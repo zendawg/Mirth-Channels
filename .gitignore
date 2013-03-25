@@ -1,6 +1,6 @@
 stereoscopy-*.xml
 vfa-*.xml
-global-scripts.xml
-code-templates.xml
+global_scripts.xml
+code_templates.xml
 file-utils.xml
 logger.xml
