@@ -123,7 +123,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		}
 
 		// encoding required to MD5 directory and file names:
-		var encodeutils = new Packages.org.statefive.encodeutils.EncodeUtils();
+		var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
 		var pidEncodedDir = getPatientUniquePrefix(pid);
 		// the patients directory name as an encoded MD5 value:
 		var encodedDir = pidEncodedDir + &apos;-&apos; + encodeutils.md5(pid);
@@ -172,9 +172,9 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		}
 		var imageutils = null;
 		try {
-			imageutils = new Packages.org.statefive.imageutils.ImageUtils();
+			imageutils = new Packages.org.openeyes.esb.imageutils.ImageUtils();
 		} catch(err) {
-			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
+			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.openeyes.esb.imageutils.ImageUtils&quot;);
 			return;
 		}
 			// all TIF from here:

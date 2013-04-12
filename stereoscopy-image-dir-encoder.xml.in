@@ -81,7 +81,7 @@ var pid = data[&apos;pid&apos;]
 var filename = data[&apos;originalFilename&apos;]
 
 // encoding required to MD5 directory and file names:
-var encodeutils = new Packages.org.statefive.encodeutils.EncodeUtils();
+var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
 // the patients directory name as an encoded MD5 value:
 
 var encodedDir = getPatientUniquePrefix(pid) + &apos;-&apos; + encodeutils.md5(pid);

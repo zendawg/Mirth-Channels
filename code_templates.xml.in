@@ -259,9 +259,9 @@ function fileLocationChange(operation, src, dest, errDest) {
 function scaleImage(srcImage, destImage, width, height) {
 	var imageutils = null;
 	try {
-		imageutils = new Packages.org.statefive.imageutils.ImageUtils();
+		imageutils = new Packages.org.openeyes.esb.imageutils.ImageUtils();
 	} catch(err) {
-		log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
+		log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.openeyes.esb.imageutils.ImageUtils&quot;);
 		return;
 	}
 
