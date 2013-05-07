@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1363900022101</time>
+    <time>1367589747601</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>58</revision>
+  <revision>190</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -82,6 +82,7 @@ var data = new XML(messageObject.getTransformedData())
 log(channelId, &apos;info&apos;, &apos;data=&apos; + data);
 log(channelId, &apos;info&apos;, &apos;before transformation=&apos; + messageObject.getTransformedData());
 var filename = data[&apos;originalFilename&apos;];
+//var assetId = data[&apos;assetId&apos;]
 
 if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; filename.length() &gt; 0) {
 	var pid = null;
@@ -123,12 +124,11 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		}
 
 		// encoding required to MD5 directory and file names:
-		var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
+		//var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
 		var pidEncodedDir = getPatientUniquePrefix(pid);
 		// the patients directory name as an encoded MD5 value:
-		var encodedDir = pidEncodedDir + &apos;-&apos; + encodeutils.md5(pid);
+		var encodedDir = pidEncodedDir;// + &apos;-&apos; + encodeutils.md5(pid);
 		// the name of the encoded file:
-		var encodedFile = encodeutils.md5(filename);
 		// this is where (encoded) patient directories are created:
 		var imagesDir = globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;);
 		// this is where the thumbnail of the image will be created:
@@ -137,7 +137,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		var mkDestDirThumbs = new java.io.File(mkDestDir, &apos;thumbs&apos;);
 		// where sub-images will go:
 		var mkDestDirSubImages = new java.io.File(mkDestDir, &apos;subimages&apos;);
-
+	
 		try {
 			// create the test directory (and all parent directories) where images will be stored:		
 			router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
@@ -147,12 +147,37 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 			log(channelId, &apos;error&apos;, &apos;Failed to create directory: &apos; + err);
 		}
 
+		var orig = new java.io.File(mkDestDir, &quot;test.tif&quot;);
+		var assetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, orig.length(), &quot;.tif&quot;);
+
+		var encodedFile = assetId;
+		var orig = new java.io.File(mkDestDir, encodedFile + &quot;.tif&quot;);
+
 		fileLocationChange(&apos;move&apos;, imagesDir + &quot;/&quot; + filename,
 				mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile + &quot;.tif&quot;,
 				globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
-		var orig = new java.io.File(mkDestDir, encodedFile + &quot;.tif&quot;);
-		addFile(orig);
 
+dbConn = getDbConnection();
+var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
+    + &quot; VALUES (&apos;&quot; + getFileId(orig) + &quot;&apos;)&quot;
+dbConn.executeUpdate(sql);
+var sql = &quot;UPDATE &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;) + &quot; set tif_file_id=&quot;
+    + getFileId(orig) + &quot; where file_name=&apos;&quot; + filename + &quot;&apos;&quot;;
+log(channelId, &apos;info&apos;, sql);
+dbConn.executeUpdate(sql);
+		var newFileId = addFile(orig);
+		linkAssetWithFile(assetId, newFileId);
+		//dbConn = getDbConnection();
+		//sql = &apos;update &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;) + &apos; set asset_id=&apos; + assetId + &apos; where id=&apos; + newFileId;
+		//dbConn.executeUpdate(sql);
+
+		//var assetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, orig.length(), &quot;.tif&quot;);
+
+		/*var assetFile = new java.io.File(mkDestDir, encodedFile + &quot;.tif&quot;);
+		var assetId = createAsset(getFileId(assetFile),
+			 encodedFile + &quot;.tif&quot;, &apos;Humphreys&apos;, &apos;Humphreys import&apos;, &apos;image/tiff&apos;, assetFile.length(), &apos;tiff&apos; );
+		var encodedFile = assetId;
+		*/
 		if (testStrategy != null &amp;&amp; testStrategy.toLowerCase() != &apos;sita-standard&apos;) {
 			log(channelId, &apos;info&apos;, &apos;Test strategy &apos; + testStrategy + &apos; is not SITA-Standard; no image manipulation to be done for this test type.&apos;);
 			// TODO - create dir name in vfa images directory and move the file there
@@ -181,27 +206,48 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		var tmpFile = encodedFile;
 		encodedFile = encodedFile + &quot;.tif&quot;;
 		var subImage = new java.io.File(mkDestDirSubImages, encodedFile);
-	
+
 		try {
+			//assetId = createAsset(&quot;VFA&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, 10, &quot;.tif&quot;);
 			imageutils.subImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile,
-					1302, 520, 925, 834, mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + encodedFile);
+					1302, 520, 925, 834, mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + assetId + &apos;.tif&apos;);
+			var subImage = new java.io.File(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + assetId + &apos;.tif&apos;);
+			var fileId = addFile(subImage);
+			linkAssetWithFile(assetId, fileId);
+
+dbConn = getDbConnection();
+var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
+    + &quot; VALUES (&apos;&quot; + getFileId(subImage) + &quot;&apos;)&quot;
+dbConn.executeUpdate(sql);
+//			var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
+//    			+ &quot; VALUES (&apos;&quot; + getFileId(subImage) + &quot;&apos;)&quot;
 			try {
 				var src = new java.io.File(mkDestDir, encodedFile);
-				fileAudit(&apos;t&apos;, &apos;f&apos;, mkDestDir.getAbsolutePath(), encodedFile,
-						mkDestDirSubImages.getAbsolutePath(), encodedFile, src.length(), subImage.length());
+				fileAudit(&apos;t&apos;, &apos;f&apos;, mkDestDir, new java.io.File(mkDestDir, encodedFile),
+						mkDestDirSubImages, new java.io.File(mkDestDirSubImages, assetId + &apos;.tif&apos;), src.length(), subImage.length());
 			} catch(err) {
 				log(channelId, &quot;error&quot;, err);
 			}
 		} catch(err) {
-			log(channelId, &quot;error&quot;, &quot;Library invocation failure: &quot; + err);
+			
 		}
-		encodedFile = tmpFile;
-		scaleImage(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + encodedFile + &quot;.tif&quot;,
-					mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + encodedFile + &quot;.jpg&quot;, width, height);
-		var src = new java.io.File(mkDestDirSubImages, encodedFile + &quot;.tif&quot;);
+
+		//var newAssetId = assetId = createAsset(&quot;VFA&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, 10, &quot;.jpg&quot;);
+		scaleImage(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;,
+					mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;, width, height);
+		var src = new java.io.File(mkDestDirSubImages, assetId + &quot;.tif&quot;);
 		addFileWithKey(src, getFileKey(getFileId(orig)));
-		var dest = new java.io.File(mkDestDirThumbs, encodedFile + &quot;.jpg&quot;);
-		addFileWithKey(dest, getFileKey(getFileId(src)));	
+		var dest = new java.io.File(mkDestDirThumbs, assetId + &quot;.tif&quot;);
+		addFileWithKey(dest, getFileKey(getFileId(src)));
+dbConn = getDbConnection();
+var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
+    + &quot; VALUES (&apos;&quot; + getFileId(dest) + &quot;&apos;)&quot;
+dbConn.executeUpdate(sql);
+		var scaledImage = new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;);
+		var assetFileId = getFileId(scaledImage);
+		linkAssetWithFile(assetId, assetFileId);
+		//var assetId = createAsset(&quot;Scaled field image&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, scaledImage.length(), &quot;.jpg&quot;);
+		createEvent(pid, 31, &apos;et_ophscimagehumphreys_document&apos;, assetId, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;);
 	}
 } else {
 	log(channelId, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +

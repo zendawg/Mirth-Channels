@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1363897584418</time>
+    <time>1367258765870</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>14</revision>
+  <revision>15</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -635,7 +635,7 @@ var size = f.length();
 
 var fileId = addFile(f);
 
-fileAudit(&apos;i&apos;, &apos;f&apos;, globalMap.get(&apos;OE_VFA_TEXT_IN&apos;), filename, null, null, size, -1);
+fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), f, null, null, size, -1);
 return message;</preprocessingScript>
   <postprocessingScript>var filename = channelMap.get(&quot;originalFilename&quot;);
 

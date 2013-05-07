@@ -7,10 +7,10 @@ The image is also scaled and a smaller copy stored in the thumbs/ directory of t
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1363857694882</time>
+    <time>1367580121546</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>11</revision>
+  <revision>51</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -20,7 +20,6 @@ The image is also scaled and a smaller copy stored in the thumbs/ directory of t
       <property name="binary">0</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="directory"></property>
       <property name="fileAge">20000</property>
       <property name="fileFilter">*.jpg</property>
       <property name="host">_OE_STEREO_IMAGES_OUT_</property>
@@ -31,7 +30,6 @@ The image is also scaled and a smaller copy stored in the thumbs/ directory of t
       <property name="passive">1</property>
       <property name="password">anonymous</property>
       <property name="pollingFrequency">20000</property>
-      <property name="pollingTime">12:00 AM</property>
       <property name="pollingType">interval</property>
       <property name="processBatchFiles">0</property>
       <property name="regex">0</property>
@@ -45,8 +43,8 @@ The image is also scaled and a smaller copy stored in the thumbs/ directory of t
     <transformer>
       <steps/>
       <inboundTemplate encoding="base64">PHN0ZXJlb0ltYWdlRmlsZT4KICA8b3JpZ2luYWxGaWxlbmFtZT52YWx1ZTM8L29yaWdpbmFsRmls
-ZW5hbWU+CiAgPHBpZD52YWx1ZTI8L3BpZD4KICA8cGhvdG9JZD52YWx1ZTE8L3Bob3RvSWQ+Cjwv
-c3RlcmVvSW1hZ2VGaWxlPg==</inboundTemplate>
+ZW5hbWU+CiAgPHBpZD52YWx1ZTI8L3BpZD4KICA8cGhvdG9JZD52YWx1ZTE8L3Bob3RvSWQ+CiAg
+PGFzc2V0SWQ+dmFsdWUxPC9hc3NldElkPgo8L3N0ZXJlb0ltYWdlRmlsZT4=</inboundTemplate>
       <outboundTemplate encoding="base64"></outboundTemplate>
       <inboundProtocol>XML</inboundProtocol>
       <outboundProtocol>XML</outboundProtocol>
@@ -79,20 +77,23 @@ var data = new XML(messageObject.getTransformedData())
 var photo_id = data[&apos;photoId&apos;]
 var pid = data[&apos;pid&apos;]
 var filename = data[&apos;originalFilename&apos;]
+//var assetId = data[&apos;assetId&apos;]
 
 // encoding required to MD5 directory and file names:
 var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
 // the patients directory name as an encoded MD5 value:
 
-var encodedDir = getPatientUniquePrefix(pid) + &apos;-&apos; + encodeutils.md5(pid);
+var encodedDir = getPatientUniquePrefix(pid);// + &apos;-&apos; + encodeutils.md5(pid);
 // the name of the encoded file:
-var encodedFile = encodeutils.md5(filename) + &quot;.jpg&quot;;
+//var encodedFile = encodeutils.md5(filename) + &quot;.jpg&quot;;
 // this is where (encoded) patient directories are created:
 var imagesDir = globalMap.get(&apos;OE_STEREO_IMAGES_OUT&apos;);
 // this is where the thumbnail of the image will be created:
 var mkDestDir = new java.io.File(imagesDir + &quot;/&quot; + encodedDir);
 // ... and the actual thumbnail directory:
 var mkDestDirThumbs = new java.io.File(mkDestDir,  &quot;/thumbs/&quot;);
+var assetId = createAsset(&quot;Imported Stereo Image&quot;, &quot;Kowa image&quot;, &quot;desc&quot;, &quot;image/jpeg&quot;,
+		new java.io.File(imagesDir + &quot;/&quot; + filename).length(), &quot;.jpg&quot;);	
 
 try {
 	// create the thumbs directory (and all parent directories) where the thumbnail will be stored:		
@@ -100,16 +101,52 @@ try {
 		&quot;mkdir&quot;, mkDestDirThumbs.getAbsolutePath(), null, null),
 		false);
 
-	// Move the image from the in directory to the encoded directory:		
+	// Move the image from the in directory to the encoded directory:	
 	fileLocationChange(&apos;move&apos;, imagesDir + &quot;/&quot; + filename,
-			mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile,
+			mkDestDir.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;,
 			globalMap.get(&apos;OE_STEREO_IMAGES_ERR&apos;));
+
+var fileId = getFileId(new java.io.File(mkDestDir.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;));
+var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_DISC_FILES&apos;) + &quot; (file_id, photo_id, pid)&quot;
+    + &quot; VALUES (&quot; + fileId
+	+ &quot;,&quot; + photo_id
+    + &quot;, &apos;&quot; + pid + &quot;&apos;)&quot;
+
+var dbConn = getDbConnection();
+var result = dbConn.executeUpdate(sql);
+
 } catch (err) {
 	log(channelId, &apos;error&apos;, &apos;Failed to route message: &apos; + err)
 }
+//var oldAssetId = assetId;
+//assetId = createAsset(&quot;Imported Stereo Image&quot;, &quot;Kowa image&quot;, &quot;desc&quot;, &quot;image/jpg&quot;,
+//		new java.io.File(mkDestDir.getAbsolutePath() + &quot;/&quot; + oldAssetId + &quot;.jpg&quot;).length(), &quot;.jpg&quot;);	
+scaleImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;,
+			mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;, width, height);
+var fileId = addFile(new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;));
+linkAssetWithFile(assetId, fileId);
 
-scaleImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile,
-			mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + encodedFile, width, height);</property>
+createEvent(pid, 30, &apos;et_ophscimagestereoscopic_document&apos;, assetId, &apos;Stereo Image&apos;, &apos;Imported Stereo Image&apos;);
+
+var dbConn = getDbConnection();
+
+var fileId = getFileId(new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;));
+var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_DISC_FILES&apos;) + &quot; (file_id, photo_id, pid)&quot;
+    + &quot; VALUES (&quot; + fileId
+	+ &quot;,&quot; + photo_id
+    + &quot;, &apos;&quot; + pid + &quot;&apos;)&quot;
+try {
+	var result = dbConn.executeUpdate(sql);
+} catch (err) {
+	log(channelId, &apos;error&apos;, &apos;Failed to execute insert for statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
+} finally {
+	dbConn.close();
+}
+
+//var assetId = createAsset(fileId,
+//	encodedFile, &apos;Stereo&apos;, &apos;Stereo import&apos;, &apos;image/jpeg&apos;, 
+//	new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.jpg&quot;).length(), &quot;,jpg&quot; );
+</property>
       </properties>
       <transformer>
         <steps/>

@@ -7,10 +7,10 @@ All images will be contained in the same directory for a given patient. Note tha
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1363897547030</time>
+    <time>1367391484128</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>34</revision>
+  <revision>48</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -79,12 +79,12 @@ All images will be contained in the same directory for a given patient. Note tha
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;pid&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -102,12 +102,12 @@ All images will be contained in the same directory for a given patient. Note tha
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;photoId&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -139,13 +139,36 @@ All images will be contained in the same directory for a given patient. Note tha
             </entry>
           </data>
         </step>
+        <step>
+          <sequenceNumber>4</sequenceNumber>
+          <script>tmp[&apos;pid&apos;] = validate(msg[&apos;pid&apos;].toString(), &apos;&apos;, new Array());</script>
+          <type>Message Builder</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>tmp[&apos;pid&apos;]</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;pid&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+          </data>
+        </step>
       </steps>
       <inboundTemplate encoding="base64">PHN0ZXJlb0ltYWdlPgogIDxvcmlnaW5hbEZpbGVuYW1lPnZhbHVlMzwvb3JpZ2luYWxGaWxlbmFt
-ZT4KICA8cGlkPnBpZDwvcGlkPgogIDxwaG90b0lkPnBob3RvSWQ8L3Bob3RvSWQ+Cjwvc3RlcmVv
-SW1hZ2U+</inboundTemplate>
+ZT4KICA8cGlkPnBpZDwvcGlkPgogIDxwaG90b0lkPnBob3RvSWQ8L3Bob3RvSWQ+CiAgPGFzc2V0
+SWQ+YXNzZXRJZDwvYXNzZXRJZD4KPC9zdGVyZW9JbWFnZT4=</inboundTemplate>
       <outboundTemplate encoding="base64">PHN0ZXJlb0ltYWdlRmlsZT4KICA8b3JpZ2luYWxGaWxlbmFtZT52YWx1ZTM8L29yaWdpbmFsRmls
-ZW5hbWU+CiAgPHBpZD52YWx1ZTI8L3BpZD4KICA8cGhvdG9JZD52YWx1ZTE8L3Bob3RvSWQ+Cjwv
-c3RlcmVvSW1hZ2VGaWxlPg==</outboundTemplate>
+ZW5hbWU+CiAgPHBpZD52YWx1ZTI8L3BpZD4KICA8cGhvdG9JZD52YWx1ZTE8L3Bob3RvSWQ+CiAg
+PGFzc2V0SWQ+PC9hc3NldElkPgo8L3N0ZXJlb0ltYWdlRmlsZT4=</outboundTemplate>
       <inboundProtocol>XML</inboundProtocol>
       <outboundProtocol>XML</outboundProtocol>
       <inboundProperties>
@@ -288,7 +311,7 @@ c3RlcmVvSW1hZ2VGaWxlPg==</outboundTemplate>
       </filter>
       <transportName>Database Writer</transportName>
       <mode>DESTINATION</mode>
-      <enabled>true</enabled>
+      <enabled>false</enabled>
       <version>2.2.1.5861</version>
     </connector>
     <connector>
@@ -338,18 +361,22 @@ var size = f.length();
 
 var fileId = addFile(f);
 
-fileAudit(&apos;i&apos;, &apos;f&apos;, globalMap.get(&apos;OE_STEREO_IMAGES_IN&apos;), filename, null, null, f.length(), -1);
+fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_STEREO_IMAGES_IN&apos;)), f, null, null, f.length(), -1);
 
 var pid = filename.substring(2, filename.lastIndexOf(&apos;-&apos;))
 var tmpPhotoId = &quot;&quot; + filename.split(&apos;-&apos;)[1]
 var photoId = &quot;&quot; + tmpPhotoId.substring(0, tmpPhotoId.lastIndexOf(&apos;.&apos;))
 log(channelId, &quot;info&quot;, &apos;Extracting file data from file name: filename=&apos; + filename + &apos;, PID=&apos; + pid + &quot;, photo ID=&quot; + photoId);
 
+//var assetId = createAsset(fileId, filename, &apos;Stereo Image&apos;, &apos;Imported Stereo File&apos;, &apos;image/jpeg&apos;, f.length(), &apos;.jpg&apos;);
+
 var xml = &quot;&lt;stereoImage&gt;&quot;
 xml = xml + &quot;&lt;originalFilename&gt;&quot; + filename
 xml = xml + &quot;&lt;/originalFilename&gt;&quot;
 xml = xml + &quot;&lt;pid&gt;&quot; + pid
 xml = xml + &quot;&lt;/pid&gt;&quot;
+//xml = xml + &quot;&lt;assetId&gt;&quot; + assetId
+//xml = xml + &quot;&lt;/assetId&gt;&quot;
 xml = xml + &quot;&lt;photoId&gt;&quot; + photoId
 xml = xml + &quot;&lt;/photoId&gt;&lt;/stereoImage&gt;&quot;
 

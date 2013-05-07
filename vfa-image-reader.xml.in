@@ -7,10 +7,10 @@ Note that this channel checks less often than is required; XML files should be p
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1363873031971</time>
+    <time>1367340884474</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>21</revision>
+  <revision>43</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -57,20 +57,20 @@ Note that this channel checks less often than is required; XML files should be p
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;originalFilename&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
       </steps>
       <inboundTemplate encoding="base64">PHZmYUltYWdlPgogIDxvcmlnaW5hbEZpbGVuYW1lPnZhbHVlMzwvb3JpZ2luYWxGaWxlbmFtZT4K
-PC92ZmFJbWFnZT4=</inboundTemplate>
+ICA8YXNzZXRJZD52YWx1ZTQ8L2Fzc2V0SWQ+CjwvdmZhSW1hZ2U+</inboundTemplate>
       <outboundTemplate encoding="base64">PHZmYUltYWdlPgogIDxvcmlnaW5hbEZpbGVuYW1lPnZhbHVlMzwvb3JpZ2luYWxGaWxlbmFtZT4K
-PC92ZmFJbWFnZT4=</outboundTemplate>
+ICA8YXNzZXRJZD52YWx1ZTQ8L2Fzc2V0SWQ+CjwvdmZhSW1hZ2U+</outboundTemplate>
       <inboundProtocol>XML</inboundProtocol>
       <outboundProtocol>XML</outboundProtocol>
       <inboundProperties>
@@ -165,7 +165,7 @@ PC92ZmFJbWFnZT4=</outboundTemplate>
       </filter>
       <transportName>Database Writer</transportName>
       <mode>DESTINATION</mode>
-      <enabled>true</enabled>
+      <enabled>false</enabled>
       <version>2.2.1.5861</version>
     </connector>
     <connector>
@@ -214,11 +214,15 @@ var size = f.length();
 
 var fileId = addFile(f);
 
-fileAudit(&apos;i&apos;, &apos;f&apos;, globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;), filename, null, null, f.length(), -1);
+fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), f, null, null, f.length(), -1);
+
+//var assetId = createAsset(fileId, filename, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, f.length(), &quot;.tif&quot;);
 
 var xml = &quot;&lt;vfaImage&gt;&quot;
 xml = xml + &quot;&lt;originalFilename&gt;&quot; + filename
 xml = xml + &quot;&lt;/originalFilename&gt;&quot;
+//xml = xml + &quot;&lt;assetId&gt;&quot; + assetId
+//xml = xml + &quot;&lt;/assetId&gt;&quot;
 xml = xml + &quot;&lt;/vfaImage&gt;&quot;
 
 return xml;</preprocessingScript>

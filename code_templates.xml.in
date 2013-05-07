@@ -133,20 +133,38 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 	if (destSize == undefined || destSize &lt; 0) {
 		destSize = null;
 	}
+	var srcParentId = getDirectoryId(srcParent);
+	var destParentId = getDirectoryId(destParent);
+	var srcChildId = getDirectoryId(srcChild);
+	var destChildId = getDirectoryId(destChild);
+	var columns = &quot;&quot;;
+	var columnValues = &quot;&quot;;
+	if (srcParentId &gt; -1) {
+		columns = columns + &quot;, src_parent&quot;;
+		columnValues = columnValues + &quot;, &apos;&quot; + srcParentId + &quot;&apos;&quot;
+	}
+	if (destParentId &gt; -1) {
+		columns = columns + &quot;, dest_parent&quot;;
+		columnValues = columnValues + &quot;, &apos;&quot; +destParentId + &quot;&apos;&quot;
+	}
+	if (srcChildId &gt; -1) {
+		columns = columns + &quot;, src_child&quot;;
+		columnValues = columnValues + &quot;, &apos;&quot; + srcChildId + &quot;&apos;&quot;
+	}
+	if (destChildId &gt; -1) {
+		columns = columns + &quot;dest_child&quot;;
+		columnValues = columnValues + &quot;, &apos;&quot; + destChildId + &quot;&apos;&quot;
+	}
 	var sql = &quot;INSERT INTO &quot;
 		+ globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE_AUDIT&apos;)
-		+ &quot; (created_date, src_size, dest_size, operation, type, src_parent, src_child, dest_parent, dest_child)&quot;
+		+ &quot; (created_date, src_size, dest_size, operation, type&quot; + columns + &quot;)&quot;
     	+ &quot; VALUES (&apos;&quot; +
 // TODO getYear is deprecated, but getFullYear fails - sort out js version/libs
 		(now.getYear()+1900) + &quot;-&quot; + (now.getMonth()+1) + &quot;-&quot; + now.getDate() + &quot; &quot; + now.getHours() + &quot;:&quot; + now.getMinutes() + &quot;:&quot; + now.getSeconds() + &quot;&apos;, &quot;
 		+ srcSize + &quot;, &quot;
 		+ destSize + &quot;, &apos;&quot;
 		+ operation + &quot;&apos;,&apos;&quot;
-    	+ type + &quot;&apos;,&quot;
-    	+ &quot;&apos;&quot; + srcParent + &quot;&apos;,&quot;
-	    + &quot;&apos;&quot; + srcChild + &quot;&apos;,&quot;
-    	+ &quot;&apos;&quot; + destParent + &quot;&apos;,&quot;
-    	+ &quot;&apos;&quot; + destChild + &quot;&apos;)&quot;
+    	+ type + &quot;&apos;&quot; + columnValues + &quot;)&quot;
 	try {
 		var result = dbConn.executeUpdate(sql);
 		try {
@@ -272,8 +290,7 @@ function scaleImage(srcImage, destImage, width, height) {
 	try {
 		imageutils.scale(srcImage, width, height, destImage);
 		try {
-			fileAudit(&apos;t&apos;, &apos;f&apos;, srcImageDir.getAbsolutePath(), srcImageFile.getName(),
-					destImageDir.getAbsolutePath(), destImageFile.getName(), srcImageFile.length(), destImageFile.length());
+			fileAudit(&apos;t&apos;, &apos;f&apos;, srcImageDir, srcImageFile, destImageDir, destImageFile, srcImageFile.length(), destImageFile.length());
 			log(channelId, &quot;info&quot;, &quot;Image &quot;
 					+ srcImage + &quot; scaled to : &quot; + destImage);
 		}
@@ -452,19 +469,21 @@ function getFileId(f) {
  */ 
 function getDirectoryId(dir) {
 	var dbConn = getDbConnection();
-	var path = dir.getAbsolutePath();
-	var dirId = -1;
-	var sql = null; 
-	try {
-		sql = &quot;SELECT id from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_DIRECTORY&apos;) + &quot; where path=&apos;&quot; + path + &quot;&apos;&quot;;
-		var result = dbConn.executeCachedQuery(sql);
-		if (result.next()) {
-			dirId = result.getInt(1);
+	if (dir != null) {
+		var path = dir.getAbsolutePath();
+		var dirId = -1;
+		var sql = null; 
+		try {
+			sql = &quot;SELECT id from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_DIRECTORY&apos;) + &quot; where path=&apos;&quot; + path + &quot;&apos;&quot;;
+			var result = dbConn.executeCachedQuery(sql);
+			if (result.next()) {
+				dirId = result.getInt(1);
+			}
+		} catch(err) {
+			log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
+		} finally {
+			dbConn.close();
 		}
-	} catch(err) {
-		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
-	} finally {
-		dbConn.close();
 	}
 	return dirId;
 }</code>
@@ -532,6 +551,7 @@ function getFileKey(fileId) {
 function addFileWithKey(f, key) {
 	var dir = f.getParentFile();
 	var dir_id = addDirectory(dir);
+	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
 	if (getFileId(f) &lt; 0) {
 		var dbConn = getDbConnection();
 		var tstamp = f.lastModified();
@@ -539,9 +559,9 @@ function addFileWithKey(f, key) {
 		var name = f.getName();
 
 		var sql = &apos;INSERT into &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;)
-			+ &apos; (name, modified, length, chronological_key, dir_id) &apos;
+			+ &apos; (name, modified, created_date, length, chronological_key, dir_id) &apos;
 			+ &apos;values (\&apos;&apos;
-			+ f.getName() + &apos;\&apos;,&apos; + f.lastModified() + &apos;,&apos; + f.length() + &apos;,&apos; + key + &apos;,&apos; + dir_id + &apos;)&apos;;
+			+ f.getName() + &apos;\&apos;,&apos; + f.lastModified() + &apos; , \&apos;&apos; + createdDate + &apos;\&apos;,&apos; + f.length() + &apos;,&apos; + key + &apos;,&apos; + dir_id + &apos;)&apos;;
 		try {
 			var result = dbConn.executeUpdate(sql);
 			log(channelId, &apos;info&apos;, &apos;File successfully inserted with statement: &apos; + sql);
@@ -552,6 +572,140 @@ function addFileWithKey(f, key) {
 		}
 	}
 	return getFileId(f);
+}</code>
+    <type>FUNCTION</type>
+    <scope>0</scope>
+    <version>2.2.1.5861</version>
+  </codeTemplate>
+  <codeTemplate>
+    <id>a9d852b5-dda1-4585-96ef-fea55e925900</id>
+    <name>createAsset</name>
+    <tooltip></tooltip>
+    <code>/**
+ * Gets the file id for the specified file in the database,
+ * if it exists.
+ * 
+ * f - an instance of a java.io.File. It is up to the caller to ensure the
+ * file exists and that it is not null.
+ * 
+ * return the id, or -1 if it doesn&apos;t exist.
+ */ 
+function createAsset(name, title, description, mimetype, filesize, extension) {
+	var dbConn = getDbConnection();
+	var sql = null;
+	var assetId = -1;
+	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+	try {
+		sql = &quot;insert into asset (name, title, description, mimetype, filesize, extension, created_date) values (&quot;
+			+ &quot;&apos;&quot; + name + &quot;&apos;, &apos;&quot; + title + &quot;&apos;, &apos;&quot; + description + &quot;&apos;, &quot;
+			+ &quot;&apos;&quot; +  mimetype + &quot;&apos;, &quot; + filesize + &quot;, &apos;&quot; + extension + &quot;&apos;, &apos;&quot; + createdDate + &quot;&apos;)&quot; ; 
+		var result = dbConn.executeUpdate(sql);
+		sql = &quot;select id from asset where created_date=&apos;&quot; + createdDate + &quot;&apos;&quot;;
+		var result = dbConn.executeCachedQuery(sql);
+		if (result.next()) {
+			assetId = result.getInt(1);
+log(channelId, &apos;info&apos;, &apos;Got &apos;+ assetId + &apos; from date &apos; + createdDate);
+		}
+	} catch(err) {
+		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
+	} finally {
+		dbConn.close();
+	}
+	return assetId;
+}</code>
+    <type>FUNCTION</type>
+    <scope>0</scope>
+    <version>2.2.1.5861</version>
+  </codeTemplate>
+  <codeTemplate>
+    <id>01911bd4-3cff-4fa6-a062-96bd415fab77</id>
+    <name>getCurrentDateTime</name>
+    <tooltip></tooltip>
+    <code>// modify function_name and parameters as you wish.
+// one function per template is recommended. i.e.) create a new code template for each new function.
+function getCurrentDateTime() {
+	var currentTime = java.lang.System.currentTimeMillis();
+	var date = new java.io.Date(currentTime);
+	var dateFormatter = new java.text.SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+	
+	return dateFormatter.format(date);
+}</code>
+    <type>FUNCTION</type>
+    <scope>0</scope>
+    <version>2.2.1.5861</version>
+  </codeTemplate>
+  <codeTemplate>
+    <id>6c16215b-611f-48fa-940d-29f80512a8f6</id>
+    <name>createEvent</name>
+    <tooltip></tooltip>
+    <code>
+function createEvent(pid, event_type_id, tablename, assetId, title, description) {
+
+	var dbConn = getDbConnection();
+	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+
+	try {
+		sql = &apos;select id from patient where hos_num=\&apos;&apos; + pid + &apos;\&apos;&apos;;
+		
+		var result = dbConn.executeCachedQuery(sql);
+		var pateint_id=-1;
+		if (result.next()) {
+			patient_id=result.getInt(1);
+		}
+
+		sql = &apos;select id from episode where legacy=1 and patient_id=&apos; + patient_id;
+		
+		result = dbConn.executeCachedQuery(sql);
+		var episode_id=-1;
+		if (result.next()) {
+			episode_id=result.getInt(1);
+		}
+		if (episode_id == -1) {
+			sql = &apos;insert into episode (patient_id, legacy, created_date, start_date) values (&apos;
+				+ patient_id + &apos;, 1, \&apos;&apos; + createdDate + &apos;\&apos;, \&apos;&apos; + createdDate + &apos;\&apos;)&apos;;
+	
+			var result = dbConn.executeUpdate(sql);
+			sql = &apos;select id from episode where patient_id=&apos; + patient_id + &apos; and created_date=\&apos;&apos; + createdDate + &apos;\&apos; and legacy=1&apos;;
+			result = dbConn.executeCachedQuery(sql);
+			if (result.next()) {
+				episode_id=result.getInt(1);
+			}
+		}	
+		sql = &apos;insert into event (episode_id, created_user_id, datetime, created_date, event_type_id) values (&apos;
+			+ episode_id + &apos;, 1, \&apos;&apos; + createdDate + &apos;\&apos;, \&apos;&apos; + createdDate + &apos;\&apos;, &apos; +  event_type_id + &apos;)&apos;;
+		var result = dbConn.executeUpdate(sql);
+		var sql = &apos;select id from event where created_date=\&apos;&apos; + createdDate + &apos;\&apos;&apos;;
+		var result = dbConn.executeCachedQuery(sql);
+		if (result.next()) {
+			var event_id = result.getInt(1);
+			sql = &apos;insert into &apos; + tablename + &apos; (event_id, asset_id, title, description) values (&apos;
+				+ event_id + &apos;, &apos; + assetId + &quot;, &apos;&quot; + title + &apos;\&apos;, \&apos;&apos; + description +  &apos;\&apos;)&apos;;
+			dbConn.executeUpdate(sql);
+		}
+	} catch(err) {
+		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
+	} finally {
+		dbConn.close();
+	}
+
+}</code>
+    <type>FUNCTION</type>
+    <scope>0</scope>
+    <version>2.2.1.5861</version>
+  </codeTemplate>
+  <codeTemplate>
+    <id>f3b3c244-8d3e-4bfe-a1bf-cd372935185f</id>
+    <name>linkAssetWithFile</name>
+    <tooltip></tooltip>
+    <code>// modify function_name and parameters as you wish.
+// one function per template is recommended. i.e.) create a new code template for each new function.
+function linkAssetWithFile(assetId, fileId) {
+
+	dbConn = getDbConnection();
+	if (assetId &gt; -1 &amp;&amp; fileId &gt; -1) {
+		sql = &apos;update &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;) + &apos; set asset_id=&apos; + assetId + &apos; where id=&apos; + fileId;
+		dbConn.executeUpdate(sql);
+	}
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
