@@ -249,7 +249,7 @@ dbConn.executeUpdate(sql);
 		var assetFileId = getFileId(scaledImage);
 		linkAssetWithFile(assetId, assetFileId);
 		//var assetId = createAsset(&quot;Scaled field image&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, scaledImage.length(), &quot;.jpg&quot;);
-		createEvent(pid, 31, &apos;et_ophscimagehumphreys_document&apos;, assetId, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;);
+		//createEvent(pid, 31, &apos;et_ophscimagehumphreys_document&apos;, assetId, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;);
 	}
 } else {
 	log(channelId, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +
