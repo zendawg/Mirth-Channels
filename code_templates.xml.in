@@ -152,7 +152,7 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 		columnValues = columnValues + &quot;, &apos;&quot; + srcChildId + &quot;&apos;&quot;
 	}
 	if (destChildId &gt; -1) {
-		columns = columns + &quot;dest_child&quot;;
+		columns = columns + &quot;, dest_child&quot;;
 		columnValues = columnValues + &quot;, &apos;&quot; + destChildId + &quot;&apos;&quot;
 	}
 	var sql = &quot;INSERT INTO &quot;
