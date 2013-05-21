@@ -159,16 +159,6 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 				mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile + &quot;.tif&quot;,
 				globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
 
-var fileToMove = new java.io.File(imagesDir + "/" + filename);
-if (!fileToMove.exists()) {
-	log(channelId, 'error', 'Request to move a non-existent file: ' + fileToMove.getAbsolutePath());
-	return;
-}
-if (fileToMove.isDirectory()) {
-	log(channelId, 'error', 'Request to move a directory - leaving it: ' + fileToMove.getAbsolutePath());
-	return;
-}
-
 dbConn = getDbConnection();
 var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
     + &quot; VALUES (&apos;&quot; + getFileId(orig) + &quot;&apos;)&quot;
