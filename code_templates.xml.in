@@ -648,7 +648,7 @@ function createEvent(pid, event_type_id, tablename, assetId, title, description)
 		sql = &apos;select id from patient where hos_num=\&apos;&apos; + pid + &apos;\&apos;&apos;;
 		
 		var result = dbConn.executeCachedQuery(sql);
-		var pateint_id=-1;
+		var patient_id=-1;
 		if (result.next()) {
 			patient_id=result.getInt(1);
 		}
