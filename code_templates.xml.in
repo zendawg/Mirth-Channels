@@ -277,9 +277,9 @@ function fileLocationChange(operation, src, dest, errDest) {
 function scaleImage(srcImage, destImage, width, height) {
 	var imageutils = null;
 	try {
-		imageutils = new Packages.org.openeyes.esb.imageutils.ImageUtils();
+		imageutils = new Packages._OE_JAVA_PACKAGE_.imageutils.ImageUtils();
 	} catch(err) {
-		log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.openeyes.esb.imageutils.ImageUtils&quot;);
+		log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
 		return;
 	}
 
@@ -319,7 +319,7 @@ function scaleImage(srcImage, destImage, width, height) {
  * return - the patient&apos;s ID, if there is one; null otherwise.
  */
 function getPatientUniquePrefix(hosNum) {
-	var sql = &quot;SELECT count(*) from _OE_DB_SERVICE_BUS_UID_ where pid=&apos;&quot; + hosNum + &quot;&apos;&quot;;
+	var sql = &quot;SELECT count(*) from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_UID&apos;) + &quot; where pid=&apos;&quot; + hosNum + &quot;&apos;&quot;;
 	var prefix = &apos;undefined&apos;;
 	var dbConn = getDbConnection();
 	try {
@@ -558,12 +558,11 @@ function addFileWithKey(f, key) {
 		var length = f.length();
 		var name = f.getName();
 
-		
 		var sql = &apos;INSERT into &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;)
-		+ &apos; (name, modified, created_date, length, chronological_key, dir_id) &apos;
-		+ &apos;values (\&apos;&apos;
-		+ f.getName() + &apos;\&apos;,&apos; + f.lastModified() + &apos; , \&apos;&apos; + createdDate + &apos;\&apos;,&apos; + f.length() + &apos;,&apos; + key + &apos;,&apos; + dir_id + &apos;)&apos;;
-try {
+			+ &apos; (name, modified, created_date, length, chronological_key, dir_id) &apos;
+			+ &apos;values (\&apos;&apos;
+			+ f.getName() + &apos;\&apos;,&apos; + f.lastModified() + &apos; , \&apos;&apos; + createdDate + &apos;\&apos;,&apos; + f.length() + &apos;,&apos; + key + &apos;,&apos; + dir_id + &apos;)&apos;;
+		try {
 			var result = dbConn.executeUpdate(sql);
 			log(channelId, &apos;info&apos;, &apos;File successfully inserted with statement: &apos; + sql);
 		} catch(err) {

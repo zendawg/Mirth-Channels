@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1367589747601</time>
+    <time>1368127785399</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>190</revision>
+  <revision>192</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -20,6 +20,7 @@ All encoding is done using MD5 hash.</description>
       <property name="binary">0</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
+      <property name="directory"></property>
       <property name="fileAge">20000</property>
       <property name="fileFilter">*.tif</property>
       <property name="host">_OE_VFA_IMAGES_OUT_</property>
@@ -30,6 +31,7 @@ All encoding is done using MD5 hash.</description>
       <property name="passive">1</property>
       <property name="password">anonymous</property>
       <property name="pollingFrequency">1000</property>
+      <property name="pollingTime">12:00 AM</property>
       <property name="pollingType">interval</property>
       <property name="processBatchFiles">0</property>
       <property name="regex">0</property>
@@ -124,7 +126,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		}
 
 		// encoding required to MD5 directory and file names:
-		//var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
+		//var encodeutils = new Packages._OE_JAVA_PACKAGE_.encodeutils.EncodeUtils();
 		var pidEncodedDir = getPatientUniquePrefix(pid);
 		// the patients directory name as an encoded MD5 value:
 		var encodedDir = pidEncodedDir;// + &apos;-&apos; + encodeutils.md5(pid);
@@ -162,7 +164,7 @@ var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_F
     + &quot; VALUES (&apos;&quot; + getFileId(orig) + &quot;&apos;)&quot;
 dbConn.executeUpdate(sql);
 var sql = &quot;UPDATE &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;) + &quot; set tif_file_id=&quot;
-    + getFileId(orig) + &quot; where file_name=&apos;&quot; + filename + &quot;&apos;&quot;;
+    + getFileId(orig) + &quot; where file_name=&apos;&quot; + filename + &quot;&apos; and pid=\&apos;&quot; + pid + &quot;&apos;&quot;;
 log(channelId, &apos;info&apos;, sql);
 dbConn.executeUpdate(sql);
 		var newFileId = addFile(orig);
@@ -197,9 +199,9 @@ dbConn.executeUpdate(sql);
 		}
 		var imageutils = null;
 		try {
-			imageutils = new Packages.org.openeyes.esb.imageutils.ImageUtils();
+			imageutils = new Packages._OE_JAVA_PACKAGE_.imageutils.ImageUtils();
 		} catch(err) {
-			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.openeyes.esb.imageutils.ImageUtils&quot;);
+			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
 			return;
 		}
 			// all TIF from here:
