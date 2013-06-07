@@ -7,10 +7,10 @@ Note that this channel checks less often than is required; XML files should be p
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1367340884474</time>
+    <time>1370514177119</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>43</revision>
+  <revision>90</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -20,13 +20,13 @@ Note that this channel checks less often than is required; XML files should be p
       <property name="binary">1</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="fileAge">10000</property>
+      <property name="fileAge">20000</property>
       <property name="fileFilter">*.tif</property>
       <property name="host">_OE_VFA_TEXT_IN_</property>
       <property name="ignoreDot">1</property>
       <property name="moveToDirectory"></property>
       <property name="moveToErrorDirectory">_OE_VFA_IMAGES_ERR_</property>
-      <property name="moveToPattern">${ORIGINALNAME}</property>
+      <property name="moveToPattern"></property>
       <property name="passive">1</property>
       <property name="password">anonymous</property>
       <property name="pollingFrequency">1000</property>
@@ -44,25 +44,29 @@ Note that this channel checks less often than is required; XML files should be p
       <steps>
         <step>
           <sequenceNumber>0</sequenceNumber>
-          <name>original filename</name>
-          <script>tmp[&apos;originalFilename&apos;] = validate(msg[&apos;originalFilename&apos;].toString(), &apos;&apos;, new Array());</script>
-          <type>Message Builder</type>
+          <name>ORIGINAL_FILENAME</name>
+          <script>var mapping;try { mapping = msg[&apos;originalFilename&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;ORIGINAL_FILENAME&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
           <data class="map">
             <entry>
               <string>Variable</string>
-              <string>tmp[&apos;originalFilename&apos;]</string>
+              <string>ORIGINAL_FILENAME</string>
             </entry>
             <entry>
               <string>DefaultValue</string>
               <string></string>
             </entry>
             <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
               <string>Mapping</string>
               <string>msg[&apos;originalFilename&apos;].toString()</string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
+              <string>isGlobal</string>
+              <string>channel</string>
             </entry>
           </data>
         </step>
@@ -90,91 +94,17 @@ ICA8YXNzZXRJZD52YWx1ZTQ8L2Fzc2V0SWQ+CjwvdmZhSW1hZ2U+</outboundTemplate>
   </sourceConnector>
   <destinationConnectors>
     <connector>
-      <name>Destination 1</name>
+      <name>Destination 3</name>
       <properties>
-        <property name="DataType">Database Writer</property>
-        <property name="URL">x</property>
-        <property name="driver">_OE_DB_DRIVER_</property>
-        <property name="host">query</property>
-        <property name="password">z</property>
-        <property name="query"></property>
+        <property name="DataType">JavaScript Writer</property>
+        <property name="host">sink</property>
         <property name="script">var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), $(&apos;originalFilename&apos;));
-var fileId = getFileId(f);
+var size = f.length();
 
-var dbConn = getDbConnection();
+var fileId = addFile(f);
+log(channelId, &apos;debug&apos;, &apos;Added file &apos; + f.getAbsolutePath());
 
-var data = new XML(messageObject.getTransformedData());
-//var filename = data[&apos;originalFilename&apos;]&#xd;
-var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
-    + &quot; VALUES (&apos;&quot; + fileId + &quot;&apos;)&quot;
-// first, insert this new data in to the DB:
-try {
-	log(channelId, &apos;info&apos;, &apos;About to execute SQL: &apos; + sql);
-	var result = dbConn.executeUpdate(sql);
-	log(channelId, &apos;info&apos;, &apos;Successfully executed insert for SQL: &apos; + sql);
-} catch (err) {
-	log(channelId, &apos;error&apos;, &apos;Failed to execute insert for statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
-} finally {
-	dbConn.close();
-}</property>
-        <property name="useScript">1</property>
-        <property name="username">y</property>
-      </properties>
-      <transformer>
-        <steps>
-          <step>
-            <sequenceNumber>0</sequenceNumber>
-            <name>original filename</name>
-            <script>tmp[&apos;originalFilename&apos;] = validate(msg[&apos;originalFilename&apos;].toString(), &apos;&apos;, new Array());</script>
-            <type>Message Builder</type>
-            <data class="map">
-              <entry>
-                <string>Variable</string>
-                <string>tmp[&apos;originalFilename&apos;]</string>
-              </entry>
-              <entry>
-                <string>DefaultValue</string>
-                <string></string>
-              </entry>
-              <entry>
-                <string>RegularExpressions</string>
-                <list/>
-              </entry>
-              <entry>
-                <string>Mapping</string>
-                <string>msg[&apos;originalFilename&apos;].toString()</string>
-              </entry>
-            </data>
-          </step>
-        </steps>
-        <inboundTemplate encoding="base64">PHZmYUltYWdlPgogIDxvcmlnaW5hbEZpbGVuYW1lPnZhbHVlMzwvb3JpZ2luYWxGaWxlbmFtZT4K
-PC92ZmFJbWFnZT4=</inboundTemplate>
-        <outboundTemplate encoding="base64">PHZmYUltYWdlPgogIDxvcmlnaW5hbEZpbGVuYW1lPnZhbHVlMzwvb3JpZ2luYWxGaWxlbmFtZT4K
-PC92ZmFJbWFnZT4=</outboundTemplate>
-        <inboundProtocol>XML</inboundProtocol>
-        <outboundProtocol>XML</outboundProtocol>
-        <inboundProperties>
-          <property name="stripNamespaces">true</property>
-        </inboundProperties>
-        <outboundProperties>
-          <property name="stripNamespaces">true</property>
-        </outboundProperties>
-      </transformer>
-      <filter>
-        <rules/>
-      </filter>
-      <transportName>Database Writer</transportName>
-      <mode>DESTINATION</mode>
-      <enabled>false</enabled>
-      <version>2.2.1.5861</version>
-    </connector>
-    <connector>
-      <name>Destination 2</name>
-      <properties>
-        <property name="DataType">Channel Writer</property>
-        <property name="host">558e170a-57bb-4797-936c-1f0c14594a15</property>
-        <property name="synchronised">0</property>
-        <property name="template">${message.encodedData}</property>
+fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), f, null, null, f.length(), -1);</property>
       </properties>
       <transformer>
         <steps/>
@@ -190,7 +120,7 @@ PC92ZmFJbWFnZT4=</outboundTemplate>
       <filter>
         <rules/>
       </filter>
-      <transportName>Channel Writer</transportName>
+      <transportName>JavaScript Writer</transportName>
       <mode>DESTINATION</mode>
       <enabled>true</enabled>
       <version>2.2.1.5861</version>
@@ -209,13 +139,14 @@ PC92ZmFJbWFnZT4=</outboundTemplate>
   </properties>
   <preprocessingScript>var filename = muleContext.getMessage().getProperty(&quot;originalFilename&quot;);
 
-var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), filename);
+/*var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), filename);
 var size = f.length();
 
 var fileId = addFile(f);
+log(channelId, &apos;debug&apos;, &apos;Added file &apos; + f.getAbsolutePath());
 
 fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), f, null, null, f.length(), -1);
-
+*/
 //var assetId = createAsset(fileId, filename, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, f.length(), &quot;.tif&quot;);
 
 var xml = &quot;&lt;vfaImage&gt;&quot;
@@ -226,16 +157,15 @@ xml = xml + &quot;&lt;/originalFilename&gt;&quot;
 xml = xml + &quot;&lt;/vfaImage&gt;&quot;
 
 return xml;</preprocessingScript>
-  <postprocessingScript>
-var filename = channelMap.get(&quot;originalFilename&quot;);
+  <postprocessingScript>var filename = channelMap.get(&quot;ORIGINAL_FILENAME&quot;);
 
 var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), filename);
 var fout = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;)), filename);
 
-/* Note - when the postprocessor is invoked, the file to move
-	has still NOT been moved - hence we cannot obtain any
-	file information about it, which is why the move-to directory
-	is not set in this channel. Instead, let&apos;s move it ourselves: */
+// Note - when the postprocessor is invoked, the file to move
+//	has still NOT been moved - hence we cannot obtain any
+//	file information about it, which is why the move-to directory
+//	is not set in this channel. Instead, let&apos;s move it ourselves:
 fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
 
 return;</postprocessingScript>

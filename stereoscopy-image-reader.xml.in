@@ -7,10 +7,10 @@ All images will be contained in the same directory for a given patient. Note tha
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1367391484128</time>
+    <time>1369718233239</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>48</revision>
+  <revision>50</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -114,7 +114,7 @@ All images will be contained in the same directory for a given patient. Note tha
         <step>
           <sequenceNumber>3</sequenceNumber>
           <name>PATIENT_DIR</name>
-          <script>var mapping;try { mapping = channelMap.put(&apos;PATIENT_DIR&apos;, msg[&apos;pid&apos;].toString()); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}globalChannelMap.put(&apos;PATIENT_DIR&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <script>var mapping;try { mapping = channelMap.put(&apos;PATIENT_DIR&apos;, msg[&apos;pid&apos;].toString()); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}globalMap.put(&apos;PATIENT_DIR&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
           <type>Mapper</type>
           <data class="map">
             <entry>
@@ -135,7 +135,7 @@ All images will be contained in the same directory for a given patient. Note tha
             </entry>
             <entry>
               <string>isGlobal</string>
-              <string>globalChannel</string>
+              <string>global</string>
             </entry>
           </data>
         </step>

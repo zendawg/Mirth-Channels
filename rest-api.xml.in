@@ -1,0 +1,255 @@
+<channel>
+  <id>a1fd890b-899d-40c6-904b-7bd9d8cb2625</id>
+  <name>rest-api</name>
+  <description></description>
+  <enabled>true</enabled>
+  <version>2.2.1.5861</version>
+  <lastModified>
+    <time>1370588209049</time>
+    <timezone>Europe/London</timezone>
+  </lastModified>
+  <revision>12</revision>
+  <sourceConnector>
+    <name>sourceConnector</name>
+    <properties>
+      <property name="DataType">Channel Reader</property>
+      <property name="responseValue">None</property>
+    </properties>
+    <transformer>
+      <steps>
+        <step>
+          <sequenceNumber>0</sequenceNumber>
+          <name>PATIENT_ID</name>
+          <script>var mapping;try { mapping = msg[&apos;patient_id&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;PATIENT_ID&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>PATIENT_ID</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;patient_id&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>isGlobal</string>
+              <string>channel</string>
+            </entry>
+          </data>
+        </step>
+        <step>
+          <sequenceNumber>1</sequenceNumber>
+          <name>TIF_FILE_ID</name>
+          <script>var mapping;try { mapping = msg[&apos;tif_file_id&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;TIF_FILE_ID&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>TIF_FILE_ID</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;tif_file_id&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>isGlobal</string>
+              <string>channel</string>
+            </entry>
+          </data>
+        </step>
+        <step>
+          <sequenceNumber>2</sequenceNumber>
+          <name>XML_ID</name>
+          <script>var mapping;try { mapping = msg[&apos;xml_id&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;XML_ID&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>XML_ID</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;xml_id&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>isGlobal</string>
+              <string>channel</string>
+            </entry>
+          </data>
+        </step>
+        <step>
+          <sequenceNumber>3</sequenceNumber>
+          <name>TEST_STRATEGY</name>
+          <script>var mapping;try { mapping = msg[&apos;test_strategy&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;TEST_STRATEGY&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>TEST_STRATEGY</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;test_strategy&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>isGlobal</string>
+              <string>channel</string>
+            </entry>
+          </data>
+        </step>
+      </steps>
+      <inboundTemplate encoding="base64">PGNyZWF0ZUh1bXBocmV5SW1hZ2VQYWlyRXZlbnQ+Cgk8cGF0aWVudF9pZD48L3BhdGllbnRfaWQ+
+Cgk8dGlmX2ZpbGVfaWQ+PC90aWZfZmlsZV9pZD4KCTx4bWxfaWQ+PC94bWxfaWQ+Cgk8dGVzdF9z
+dHJhdGVneT48L3Rlc3Rfc3RyYXRlZ3k+CjwvY3JlYXRlSHVtcGhyZXlJbWFnZVBhaXJFdmVudD4=
+</inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundProtocol>XML</inboundProtocol>
+      <outboundProtocol>XML</outboundProtocol>
+      <inboundProperties>
+        <property name="stripNamespaces">true</property>
+      </inboundProperties>
+      <outboundProperties>
+        <property name="stripNamespaces">true</property>
+      </outboundProperties>
+    </transformer>
+    <filter>
+      <rules/>
+    </filter>
+    <transportName>Channel Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <version>2.2.1.5861</version>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector>
+      <name>Destination 1</name>
+      <properties>
+        <property name="DataType">HTTP Sender</property>
+        <property name="dispatcherAuthenticationType">Basic</property>
+        <property name="dispatcherCharset">UTF-8</property>
+        <property name="dispatcherContent">${message.rawData}</property>
+        <property name="dispatcherContentType">text/plain</property>
+        <property name="dispatcherHeaders">&lt;properties&gt;
+  &lt;property name=&quot;X_ASCCPE_PASSWORD&quot;&gt;mirth&lt;/property&gt;
+  &lt;property name=&quot;X_ASCCPE_USERNAME&quot;&gt;3ntropY&lt;/property&gt;
+&lt;/properties&gt;</property>
+        <property name="dispatcherIncludeHeadersInResponse">0</property>
+        <property name="dispatcherMethod">get</property>
+        <property name="dispatcherMultipart">0</property>
+        <property name="dispatcherParameters">&lt;properties&gt;
+  &lt;property name=&quot;patient_id&quot;&gt;${PATIENT_ID}&lt;/property&gt;
+  &lt;property name=&quot;test_strategy&quot;&gt;${TEST_STRATEGY}&lt;/property&gt;
+  &lt;property name=&quot;tif_file_id&quot;&gt;${TIF_FILE_ID}&lt;/property&gt;
+  &lt;property name=&quot;xml_id&quot;&gt;${XML_ID}&lt;/property&gt;
+&lt;/properties&gt;</property>
+        <property name="dispatcherPassword"></property>
+        <property name="dispatcherReplyChannelId">sink</property>
+        <property name="dispatcherSocketTimeout">30000</property>
+        <property name="dispatcherUseAuthentication">0</property>
+        <property name="dispatcherUsername"></property>
+        <property name="host">http://_OE_DB_HOST_/EsbRestApi/createHumphreyImagePairEvent</property>
+        <property name="queuePollInterval">200</property>
+        <property name="reconnectMillisecs">10000</property>
+        <property name="rotateQueue">0</property>
+        <property name="usePersistentQueues">0</property>
+      </properties>
+      <transformer>
+        <steps/>
+        <inboundProtocol>XML</inboundProtocol>
+        <outboundProtocol>XML</outboundProtocol>
+        <inboundProperties>
+          <property name="stripNamespaces">true</property>
+        </inboundProperties>
+        <outboundProperties>
+          <property name="stripNamespaces">true</property>
+        </outboundProperties>
+      </transformer>
+      <filter>
+        <rules/>
+      </filter>
+      <transportName>HTTP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <version>2.2.1.5861</version>
+    </connector>
+    <connector>
+      <name>Destination 2</name>
+      <properties>
+        <property name="DataType">JavaScript Writer</property>
+        <property name="host">sink</property>
+        <property name="script">messageObject.getRawData()</property>
+      </properties>
+      <transformer>
+        <steps/>
+        <inboundProtocol>XML</inboundProtocol>
+        <outboundProtocol>XML</outboundProtocol>
+        <inboundProperties>
+          <property name="stripNamespaces">true</property>
+        </inboundProperties>
+        <outboundProperties>
+          <property name="stripNamespaces">true</property>
+        </outboundProperties>
+      </transformer>
+      <filter>
+        <rules/>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <version>2.2.1.5861</version>
+    </connector>
+  </destinationConnectors>
+  <properties>
+    <property name="clearGlobalChannelMap">true</property>
+    <property name="dont_store_filtered">false</property>
+    <property name="encryptData">false</property>
+    <property name="error_messages_only">false</property>
+    <property name="initialState">started</property>
+    <property name="max_message_age">-1</property>
+    <property name="store_messages">true</property>
+    <property name="synchronous">true</property>
+    <property name="transactional">false</property>
+  </properties>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+return;</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <shutdownScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</shutdownScript>
+</channel>

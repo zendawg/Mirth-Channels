@@ -4,3 +4,4 @@ global_scripts.xml
 code_templates.xml
 file-utils.xml
 logger.xml
+*.xml

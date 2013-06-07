@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1367589747601</time>
+    <time>1370516856562</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>190</revision>
+  <revision>648</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -20,7 +20,7 @@ All encoding is done using MD5 hash.</description>
       <property name="binary">0</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="fileAge">20000</property>
+      <property name="fileAge">5000</property>
       <property name="fileFilter">*.tif</property>
       <property name="host">_OE_VFA_IMAGES_OUT_</property>
       <property name="ignoreDot">1</property>
@@ -79,64 +79,61 @@ var height = globalMap.get(&apos;OE_IMAGE_VFA_SCALE_HEIGHT&apos;);
 var testStrategy = null;
 
 var data = new XML(messageObject.getTransformedData())
-log(channelId, &apos;info&apos;, &apos;data=&apos; + data);
-log(channelId, &apos;info&apos;, &apos;before transformation=&apos; + messageObject.getTransformedData());
 var filename = data[&apos;originalFilename&apos;];
+filename=$(&apos;originalFilename&apos;)
 //var assetId = data[&apos;assetId&apos;]
-
 if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; filename.length() &gt; 0) {
 	var pid = null;
-	var dbConn = getDbConnection();
 
-	var sql = &quot;SELECT pid from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;) + &quot; where file_name = &apos;&quot; + filename + &quot;&apos; ORDER BY id DESC&quot;;
-	// first, insert this new data in to the DB:
-	try {
-		var result = dbConn.executeCachedQuery(sql);
-		result.next();
-		pid = result.getString(1);
-	} catch (err) {
-		log(channelId, &apos;error&apos;, &apos;Failed to execute query for statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
-		log(channelId, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +
-			$(&apos;originalFilename&apos;) + &quot;&apos; in the destination mapping; moving to holding directory.&quot;);
-		fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + $(&apos;originalFilename&apos;),
-			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + $(&apos;originalFilename&apos;),
+	// need to find the associated XML file that contains our meta-data:
+	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, [&apos;file_name&apos;], [filename]));
+	if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+		var searchResults = JSON.parse(ack.getMessage());
+		if (searchResults.length &gt; 0) {
+			objHumphreyXml = searchResults[0];
+			// the search results will contain the PID of the patient for the image:
+			pid = objHumphreyXml.pid;
+			// ... and the test strategy:
+			testStrategy = objHumphreyXml.test_strategy;
+		}
+	} else {
+		// throw an error and move the image to the holding directory - for some reason, the XML file did not exist:
+		fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + filename,
+			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + filename,
 			globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
 		return;
-	} finally {
-		dbConn.close();
 	}
-
-	if (pid != &apos;null&apos; &amp;&amp; pid.length() &gt; 0) {
-		dbConn = getDbConnection();
-
-		// The directory should be located in a directory named after the test strategy;
-		// also, only deal with SITA-Standard tests:
-		sql = &quot;SELECT test_strategy from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;) + &quot; where file_name = &apos;&quot; + filename + &quot;&apos;&quot;;
-		// first, insert this new data in to the DB:
-		try {
-			var result = dbConn.executeCachedQuery(sql);
-			result.next();
-			testStrategy = result.getString(1);
-		} catch (err) {
-			log(channelId, &apos;error&apos;, &apos;Failed to execute query for statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
-		} finally {
-			dbConn.close();
-		}
-
-		// encoding required to MD5 directory and file names:
-		//var encodeutils = new Packages.org.openeyes.esb.encodeutils.EncodeUtils();
-		var pidEncodedDir = getPatientUniquePrefix(pid);
-		// the patients directory name as an encoded MD5 value:
-		var encodedDir = pidEncodedDir;// + &apos;-&apos; + encodeutils.md5(pid);
-		// the name of the encoded file:
+	var objHumphreyXmlId = null;
+	var tifFileId = null;
+	// otherwise,
+	if (typeof pid === &apos;undefined&apos;) {
+		// throw an error and move the image to the holding directory - for some reason, the PID is missing:
+		log(channelId, &apos;error&apos;, &apos;PID was not defined in the associated XML file &apos; + objHumphreyXml.file_name + &apos;, ID:&apos; + id);
+		fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + filename,
+			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + filename,
+			globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
+		// TODO mark the XML file as invalid? Or deleted?
+		return;
+	} else if (typeof testStrategy === &apos;undefined&apos;) {
+		// throw an error and move the image to the holding directory - for some reason, the test strategy is missing:
+		log(channelId, &apos;error&apos;, &apos;Test Strategy was not defined in the associated XML file &apos; + objHumphreyXml.file_name + &apos;, ID:&apos; + id);
+		fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + filename,
+			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + filename,
+			globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
+		// TODO mark the XML file as invalid? Or deleted?
+		return;
+	} else {
+		// patients that do not (or do) exist use a separate uid for their directory name:
+		// (this caters for new systems importing old data)
+		var encodedDir = getPatientUniquePrefix(pid);
 		// this is where (encoded) patient directories are created:
 		var imagesDir = globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;);
 		// this is where the thumbnail of the image will be created:
 		var mkDestDir = new java.io.File(imagesDir  + &quot;/&quot; + testStrategy + &quot;/&quot; + encodedDir);
-		// where cut-down images will go:
-		var mkDestDirThumbs = new java.io.File(mkDestDir, &apos;thumbs&apos;);
-		// where sub-images will go:
+		// where sub-images will go - in this case the main image in the TIF:
 		var mkDestDirSubImages = new java.io.File(mkDestDir, &apos;subimages&apos;);
+		// where sub image thumb images will go:
+		var mkDestDirThumbs = new java.io.File(mkDestDir, &apos;thumbs&apos;);
 	
 		try {
 			// create the test directory (and all parent directories) where images will be stored:		
@@ -147,42 +144,34 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 			log(channelId, &apos;error&apos;, &apos;Failed to create directory: &apos; + err);
 		}
 
-		var orig = new java.io.File(mkDestDir, &quot;test.tif&quot;);
-		var assetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, orig.length(), &quot;.tif&quot;);
 
-		var encodedFile = assetId;
-		var orig = new java.io.File(mkDestDir, encodedFile + &quot;.tif&quot;);
+/********* START: CREATE MAIN ASSET &amp; FILE */
+		//var assetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, orig.length(), &quot;.tif&quot;);
+		var orig = new java.io.File(mkDestDir, filename);
+		//routeModel(&apos;update&apos;, buildRoutableModel(assetId, &apos;Asset&apos;, [&apos;name&apos;], [orig.getName()]));
 
 		fileLocationChange(&apos;move&apos;, imagesDir + &quot;/&quot; + filename,
-				mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile + &quot;.tif&quot;,
+				mkDestDir.getAbsolutePath() + &quot;/&quot; + filename,
 				globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
 
-dbConn = getDbConnection();
-var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
-    + &quot; VALUES (&apos;&quot; + getFileId(orig) + &quot;&apos;)&quot;
-dbConn.executeUpdate(sql);
-var sql = &quot;UPDATE &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;) + &quot; set tif_file_id=&quot;
-    + getFileId(orig) + &quot; where file_name=&apos;&quot; + filename + &quot;&apos;&quot;;
-log(channelId, &apos;info&apos;, sql);
-dbConn.executeUpdate(sql);
-		var newFileId = addFile(orig);
-		linkAssetWithFile(assetId, newFileId);
-		//dbConn = getDbConnection();
-		//sql = &apos;update &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;) + &apos; set asset_id=&apos; + assetId + &apos; where id=&apos; + newFileId;
-		//dbConn.executeUpdate(sql);
 
-		//var assetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, orig.length(), &quot;.tif&quot;);
+		var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+		var ackImg = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyImage&apos;, [&apos;file_id&apos;, &apos;created_date&apos;], [getFileId(orig), createdDate]));
+		var humphreyImage = JSON.parse(ackImg.getMessage());
 
-		/*var assetFile = new java.io.File(mkDestDir, encodedFile + &quot;.tif&quot;);
-		var assetId = createAsset(getFileId(assetFile),
-			 encodedFile + &quot;.tif&quot;, &apos;Humphreys&apos;, &apos;Humphreys import&apos;, &apos;image/tiff&apos;, assetFile.length(), &apos;tiff&apos; );
-		var encodedFile = assetId;
-		*/
-		if (testStrategy != null &amp;&amp; testStrategy.toLowerCase() != &apos;sita-standard&apos;) {
-			log(channelId, &apos;info&apos;, &apos;Test strategy &apos; + testStrategy + &apos; is not SITA-Standard; no image manipulation to be done for this test type.&apos;);
-			// TODO - create dir name in vfa images directory and move the file there
-			return;
+		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, [&apos;file_name&apos;, &apos;pid&apos;], [filename, pid]));
+		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+			var searchResults = JSON.parse(ack.getMessage());
+			if (searchResults.length &gt; 0) {
+				objHumphreyXmlId = searchResults[0].id;
+				var ack = routeModel(&apos;update&apos;, buildRoutableModel(searchResults[0].id, &apos;FsScanHumphreyXml&apos;, [&apos;tif_file_id&apos;], [getFileId(orig)]));
+				tifFileId = getFileId(orig);
+			}
 		}
+		var newFileId = getFileId(orig);
+		linkAssetWithFile(humphreyImage.asset_id, newFileId);
+
+/********* END: CREATE MAIN ASSET &amp; FILE */
 		try {
 			// create the thumbs directory (and all parent directories) where the thumbnail will be stored:		
 			router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
@@ -197,58 +186,61 @@ dbConn.executeUpdate(sql);
 		}
 		var imageutils = null;
 		try {
-			imageutils = new Packages.org.openeyes.esb.imageutils.ImageUtils();
+			imageutils = new Packages._OE_JAVA_PACKAGE_.imageutils.ImageUtils();
 		} catch(err) {
-			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.openeyes.esb.imageutils.ImageUtils&quot;);
+			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
 			return;
 		}
+
+/********* START: CREATE SUB IMAGE ASSET &amp; FILE */
 			// all TIF from here:
-		var tmpFile = encodedFile;
-		encodedFile = encodedFile + &quot;.tif&quot;;
-		var subImage = new java.io.File(mkDestDirSubImages, encodedFile);
+		var subImage = new java.io.File(mkDestDirSubImages, filename);
 
+		var subImgAssetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, 10, &quot;tif&quot;);
 		try {
-			//assetId = createAsset(&quot;VFA&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, 10, &quot;.tif&quot;);
-			imageutils.subImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + encodedFile,
-					1302, 520, 925, 834, mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + assetId + &apos;.tif&apos;);
-			var subImage = new java.io.File(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + assetId + &apos;.tif&apos;);
-			var fileId = addFile(subImage);
-			linkAssetWithFile(assetId, fileId);
+			imageutils.subImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + filename,
+					1302, 520, 925, 834, mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + filename);
+			var subImage = new java.io.File(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + filename);
+			var fileId = addFileWithKey(subImage, getFileId(orig));
+			linkAssetWithFile(subImgAssetId, fileId);
+/********* END: CREATE SUB IMAGE ASSET &amp; FILE */
 
-dbConn = getDbConnection();
-var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
-    + &quot; VALUES (&apos;&quot; + getFileId(subImage) + &quot;&apos;)&quot;
-dbConn.executeUpdate(sql);
-//			var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
-//    			+ &quot; VALUES (&apos;&quot; + getFileId(subImage) + &quot;&apos;)&quot;
 			try {
-				var src = new java.io.File(mkDestDir, encodedFile);
-				fileAudit(&apos;t&apos;, &apos;f&apos;, mkDestDir, new java.io.File(mkDestDir, encodedFile),
-						mkDestDirSubImages, new java.io.File(mkDestDirSubImages, assetId + &apos;.tif&apos;), src.length(), subImage.length());
+				var src = new java.io.File(mkDestDir, filename);
+				fileAudit(&apos;t&apos;, &apos;f&apos;, mkDestDir, new java.io.File(mkDestDir, filename),
+						mkDestDirSubImages, new java.io.File(mkDestDirSubImages, filename), src.length(), subImage.length());
 			} catch(err) {
 				log(channelId, &quot;error&quot;, err);
 			}
 		} catch(err) {
-			
+				log(channelId, &quot;error&quot;, err);
 		}
 
-		//var newAssetId = assetId = createAsset(&quot;VFA&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, 10, &quot;.jpg&quot;);
-		scaleImage(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;,
-					mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;, width, height);
-		var src = new java.io.File(mkDestDirSubImages, assetId + &quot;.tif&quot;);
-		addFileWithKey(src, getFileKey(getFileId(orig)));
-		var dest = new java.io.File(mkDestDirThumbs, assetId + &quot;.tif&quot;);
-		addFileWithKey(dest, getFileKey(getFileId(src)));
-dbConn = getDbConnection();
-var sql = &quot;INSERT INTO &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_FILES&apos;) + &quot; (file_id)&quot;
-    + &quot; VALUES (&apos;&quot; + getFileId(dest) + &quot;&apos;)&quot;
-dbConn.executeUpdate(sql);
-		var scaledImage = new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;);
-		var assetFileId = getFileId(scaledImage);
-		linkAssetWithFile(assetId, assetFileId);
-		//var assetId = createAsset(&quot;Scaled field image&quot;, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, scaledImage.length(), &quot;.jpg&quot;);
-		createEvent(pid, 31, &apos;et_ophscimagehumphreys_document&apos;, assetId, &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;);
+/********* START: CREATE THUMB SUB IMAGE ASSET &amp; FILE */
+		var src = new java.io.File(mkDestDirSubImages, filename);
+		var dest = new java.io.File(mkDestDirThumbs, filename);
+
+		var scaleImgAssetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, 10, &quot;tif&quot;);
+		scaleImage(src.getAbsolutePath(), dest.getAbsolutePath(), width, height);
+		addFileWithKey(src, getFileId(orig));
+		addFileWithKey(dest, getFileId(orig));
+
+		//var scaledImage = new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;);
+		//var assetFileId = getFileId(scaledImage);
+		var assetFileId = getFileId(dest);
+		linkAssetWithFile(scaleImgAssetId, assetFileId);
+/********* END: CREATE THUMB SUB IMAGE ASSET &amp; FILE */
 	}
+
+/********* START: INJECT EVENT */
+
+	// add event - requires tif file id
+	// only do this if we know we&apos;ve got the patient and the humphrey XML has been bound to the image:
+    if (!(typeof pid === &apos;undefined&apos;) &amp;&amp; !(typeof objHumphreyXmlId === &apos;undefined&apos;)) {
+		createHumphreyImagePairEvent(pid, tifFileId, objHumphreyXmlId, testStrategy);
+	}
+/********* END: INJECT EVENT */
+
 } else {
 	log(channelId, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +
 		$(&apos;originalFilename&apos;) + &quot;&apos; in the destination mapping; moving to holding directory.&quot;);

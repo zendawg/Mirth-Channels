@@ -7,10 +7,10 @@ The process of file modification/creation is audited.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1367258612414</time>
+    <time>1370285069699</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>23</revision>
+  <revision>29</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -268,7 +268,6 @@ if (operation == &apos;move&apos;) {
 		if (moved == &apos;false&apos;) {
 			log(channelId, &apos;error&apos;, &quot;Failed to move file: &quot; + fileData)
 		} else {
-			log(channelId, &apos;info&apos;, &quot;Success: &quot; + fileData);
 			var type = &apos;d&apos;;
 			if (!f.isDirectory()) {
 				addFileWithKey(f, fileKey);

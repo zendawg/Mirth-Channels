@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1367258765870</time>
+    <time>1370358547165</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>15</revision>
+  <revision>99</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -55,12 +55,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patient_id&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -271,12 +271,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralSeries_M&apos;][&apos;laterality&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -295,12 +295,36 @@
               <string></string>
             </entry>
             <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_strategy&apos;].toString()</string>
+            </entry>
+            <entry>
               <string>RegularExpressions</string>
               <list/>
             </entry>
+          </data>
+        </step>
+        <step>
+          <sequenceNumber>11</sequenceNumber>
+          <name>testName (out) &lt;-- Dataset - CZM_HFA_EMR_IOD - CZM_HFA_SERIES_M test_name</name>
+          <script>tmp[&apos;testName&apos;] = validate(msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_name&apos;].toString(), &apos;&apos;, new Array());</script>
+          <type>Message Builder</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>tmp[&apos;testName&apos;]</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
             <entry>
               <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_strategy&apos;].toString()</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_name&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -534,7 +558,8 @@ SEZBX0VNUl9JT0Q+DQogPC9EYXRhU2V0Pg0KPC9DWk0tWE1MPg==</inboundTemplate>
 bmRlcj4KCTxmYW1pbHlOYW1lPjwvZmFtaWx5TmFtZT4KCTxnaXZlbk5hbWU+PC9naXZlbk5hbWU+
 Cgk8bWlkZGxlTmFtZT48L21pZGRsZU5hbWU+Cgk8ZmlsZVJlZmVyZW5jZT48L2ZpbGVSZWZlcmVu
 Y2U+Cgk8c3R1ZHlEYXRlPjwvc3R1ZHlEYXRlPgoJPHN0dWR5VGltZT48L3N0dWR5VGltZT4KCTxl
-eWU+PC9leWU+Cgk8dGVzdFN0cmF0ZWd5PjwvdGVzdFN0cmF0ZWd5Pgo8L3ZmYT4=</outboundTemplate>
+eWU+PC9leWU+Cgk8dGVzdFN0cmF0ZWd5PjwvdGVzdFN0cmF0ZWd5PgoJPHRlc3ROYW1lPjwvdGVz
+dE5hbWU+CjwvdmZhPg==</outboundTemplate>
       <inboundProtocol>XML</inboundProtocol>
       <outboundProtocol>XML</outboundProtocol>
       <inboundProperties>
@@ -554,45 +579,36 @@ eWU+PC9leWU+Cgk8dGVzdFN0cmF0ZWd5PjwvdGVzdFN0cmF0ZWd5Pgo8L3ZmYT4=</outboundTempla
   </sourceConnector>
   <destinationConnectors>
     <connector>
-      <name>Destination 1</name>
+      <name>Destination 2</name>
       <properties>
-        <property name="DataType">Database Writer</property>
-        <property name="URL">_OE_DB_URL</property>
-        <property name="driver">_OE_DB_DRIVER_</property>
-        <property name="host">query</property>
-        <property name="password">_OE_DB_PASSWORD_</property>
-        <property name="query"></property>
+        <property name="DataType">JavaScript Writer</property>
+        <property name="host">sink</property>
         <property name="script">var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), $(&apos;originalFilename&apos;));
-var fileId = getFileId(f);
+var fileId = addFile(f);
 
-var dbConn = getDbConnection();
+var size = f.length();
+fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), f, null, null, size, -1);
 
 var data = new XML(messageObject.getTransformedData());
-var sql = &quot;INSERT INTO &quot;
-	+ globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;)
-	+ &quot; (file_id, pid, eye, gender, birth_date, study_date, study_time, given_name, middle_name, family_name, file_name, test_strategy)&quot;
-    + &quot; VALUES (&quot; +  fileId + &quot;, &apos;&quot; 
-	+ data[&apos;pid&apos;] + &quot;&apos;&quot; + &quot;,&quot;
-    + &quot;&apos;&quot; + data[&apos;eye&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;gender&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;birthDate&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;studyDate&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;studyTime&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;givenName&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;middleName&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;familyName&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;fileReference&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;testStrategy&apos;] + &quot;&apos;)&quot;
 
-try {
-	var result = dbConn.executeUpdate(sql);
-} catch(err) {
-	log(channelId, &quot;error&quot;, err);
-} finally {
-	dbConn.close();
+var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, &apos;created_date file_id pid eye gender birth_date study_date study_time given_name middle_name family_name file_name test_strategy test_name&apos;.split(&apos; &apos;),
+						[createdDate, fileId, data[&apos;pid&apos;], data[&apos;eye&apos;], data[&apos;gender&apos;], data[&apos;birthDate&apos;], data[&apos;studyDate&apos;], data[&apos;studyTime&apos;], data[&apos;givenName&apos;], data[&apos;middleName&apos;], data[&apos;familyName&apos;], data[&apos;fileReference&apos;], data[&apos;testStrategy&apos;], data[&apos;testName&apos;] ]));
+
+if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+
+	var filename = channelMap.get(&quot;originalFilename&quot;);
+
+	var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
+	var systime = new java.util.Date().getTime();
+	var fout = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_OUT&apos;)), systime + &quot;-&quot; + filename);
+
+	fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
+} else {
+	// leave the file here? It could be that the server is down...
+	// TODO need to give this some thought
+	log(channelId, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
 }</property>
-        <property name="useScript">1</property>
-        <property name="username">_OE_DB_USER_</property>
       </properties>
       <transformer>
         <steps/>
@@ -608,7 +624,7 @@ try {
       <filter>
         <rules/>
       </filter>
-      <transportName>Database Writer</transportName>
+      <transportName>JavaScript Writer</transportName>
       <mode>DESTINATION</mode>
       <enabled>true</enabled>
       <version>2.2.1.5861</version>
@@ -628,24 +644,8 @@ try {
   <preprocessingScript>// Modify the message variable below to pre process data
 message = message.replace(&quot;&lt;CZM-XML xmlns=\&quot;http://www.meditec.zeiss.com/czm\&quot; xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot; xsi:schemaLocation=\&quot;http://www.meditec.zeiss.com/CZM-XML-Root.xsd\&quot;&gt;&quot;, &quot;&lt;CZM-XML&gt;&quot;);
 
-var filename = muleContext.getMessage().getProperty(&quot;originalFilename&quot;);
-
-var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
-var size = f.length();
-
-var fileId = addFile(f);
-
-fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), f, null, null, size, -1);
 return message;</preprocessingScript>
-  <postprocessingScript>var filename = channelMap.get(&quot;originalFilename&quot;);
-
-var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
-var systime = new java.util.Date().getTime();
-var fout = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_OUT&apos;)), systime + &quot;-&quot; + filename);
-
-fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
-
-return;</postprocessingScript>
+  <postprocessingScript>return;</postprocessingScript>
   <deployScript>// This script executes once when the channel is deployed
 // You only have access to the globalMap and globalChannelMap here to persist data
 return;</deployScript>
