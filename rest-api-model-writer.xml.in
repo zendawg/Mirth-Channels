@@ -1,0 +1,199 @@
+<channel>
+  <id>16f07ddd-1cf5-4ab8-a146-74bffce90e75</id>
+  <name>rest-api-model-writer</name>
+  <description></description>
+  <enabled>true</enabled>
+  <version>2.2.1.5861</version>
+  <lastModified>
+    <time>1370588746809</time>
+    <timezone>Europe/London</timezone>
+  </lastModified>
+  <revision>21</revision>
+  <sourceConnector>
+    <name>sourceConnector</name>
+    <properties>
+      <property name="DataType">Channel Reader</property>
+      <property name="responseValue">None</property>
+    </properties>
+    <transformer>
+      <steps>
+        <step>
+          <sequenceNumber>0</sequenceNumber>
+          <name>MODEL_NAME</name>
+          <script>var mapping;try { mapping = msg[&apos;name&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;MODEL_NAME&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>MODEL_NAME</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;name&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>isGlobal</string>
+              <string>channel</string>
+            </entry>
+          </data>
+        </step>
+        <step>
+          <sequenceNumber>1</sequenceNumber>
+          <name>MODEL_JSON</name>
+          <script>var mapping;try { mapping = msg[&apos;json&apos;].toString(); }catch (e) { logger.error(e);  mapping = &apos;&apos;;}channelMap.put(&apos;MODEL_JSON&apos;, validate( mapping , &apos;&apos;, new Array()));</script>
+          <type>Mapper</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>MODEL_JSON</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;json&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+            <entry>
+              <string>isGlobal</string>
+              <string>channel</string>
+            </entry>
+          </data>
+        </step>
+      </steps>
+      <inboundTemplate encoding="base64">PG1vZGVsPgoJPG5hbWU+QXNzZXQ8L25hbWU+Cgk8anNvbj57IG5hbWU6ICd0ZXN0JywgZGVzY3Jp
+cHRpb246ICd0aWR5JyB9PC9qc29uPgo8L21vZGVsPg==</inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundProtocol>XML</inboundProtocol>
+      <outboundProtocol>XML</outboundProtocol>
+      <inboundProperties>
+        <property name="batchGroupingColumn"></property>
+        <property name="batchMessageDelimiter"></property>
+        <property name="batchMessageDelimiterIncluded">false</property>
+        <property name="batchScript"></property>
+        <property name="batchSkipRecords">0</property>
+        <property name="batchSplitByRecord">true</property>
+        <property name="columnDelimiter">,</property>
+        <property name="columnNames"></property>
+        <property name="columnWidths"></property>
+        <property name="escapeWithDoubleQuote">true</property>
+        <property name="ignoreCR">true</property>
+        <property name="numberedRows">false</property>
+        <property name="quoteChar">&quot;</property>
+        <property name="quoteEscapeChar">\</property>
+        <property name="recordDelimiter">
+</property>
+      </inboundProperties>
+      <outboundProperties>
+        <property name="stripNamespaces">true</property>
+      </outboundProperties>
+    </transformer>
+    <filter>
+      <rules/>
+    </filter>
+    <transportName>Channel Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <version>2.2.1.5861</version>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector>
+      <name>Destination 1</name>
+      <properties>
+        <property name="DataType">HTTP Sender</property>
+        <property name="dispatcherAuthenticationType">Basic</property>
+        <property name="dispatcherCharset">UTF-8</property>
+        <property name="dispatcherContent">${MODEL_JSON}</property>
+        <property name="dispatcherContentType">application/json</property>
+        <property name="dispatcherHeaders">&lt;properties&gt;
+  &lt;property name=&quot;Content-Type&quot;&gt;application/json&lt;/property&gt;
+  &lt;property name=&quot;Referrer&quot;&gt;http://_OE_DB_HOST_&lt;/property&gt;
+  &lt;property name=&quot;X_ASCCPE_PASSWORD&quot;&gt;3ntropY&lt;/property&gt;
+  &lt;property name=&quot;X_ASCCPE_USERNAME&quot;&gt;mirth&lt;/property&gt;
+&lt;/properties&gt;</property>
+        <property name="dispatcherIncludeHeadersInResponse">0</property>
+        <property name="dispatcherMethod">post</property>
+        <property name="dispatcherMultipart">0</property>
+        <property name="dispatcherParameters">&lt;properties&gt;
+  &lt;property name=&quot;model&quot;&gt;${MODEL_NAME}&lt;/property&gt;
+&lt;/properties&gt;</property>
+        <property name="dispatcherPassword"></property>
+        <property name="dispatcherReplyChannelId">sink</property>
+        <property name="dispatcherSocketTimeout">30000</property>
+        <property name="dispatcherUseAuthentication">0</property>
+        <property name="dispatcherUsername"></property>
+        <property name="host">http://_OE_DB_HOST_/EsbRestApi/rest</property>
+        <property name="queuePollInterval">200</property>
+        <property name="reconnectMillisecs">10000</property>
+        <property name="rotateQueue">0</property>
+        <property name="usePersistentQueues">0</property>
+      </properties>
+      <transformer>
+        <steps/>
+        <inboundProtocol>XML</inboundProtocol>
+        <outboundProtocol>XML</outboundProtocol>
+        <inboundProperties>
+          <property name="stripNamespaces">true</property>
+        </inboundProperties>
+        <outboundProperties>
+          <property name="stripNamespaces">true</property>
+        </outboundProperties>
+      </transformer>
+      <filter>
+        <rules/>
+      </filter>
+      <transportName>HTTP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <version>2.2.1.5861</version>
+    </connector>
+  </destinationConnectors>
+  <properties>
+    <property name="clearGlobalChannelMap">true</property>
+    <property name="dont_store_filtered">false</property>
+    <property name="encryptData">false</property>
+    <property name="error_messages_only">false</property>
+    <property name="initialState">started</property>
+    <property name="max_message_age">-1</property>
+    <property name="store_messages">true</property>
+    <property name="synchronous">true</property>
+    <property name="transactional">false</property>
+  </properties>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+var httpResponse = responseMap.get(&apos;Destination 1&apos;);
+//log(channelId, &apos;info&apos;, &apos;HTTP RESTful API response, writer: &apos; + httpResponse.getMessage());
+/*
+ * Shouldn&apos;t have to do this; however, the call in the javascript writer
+ * of AssetReader:
+ *   var ack = router.routeMessage(channelName, xmlMessage, false);
+ *   var msg = ack.getMessage();
+ * currently returns success without the object. This enables the other channel to
+ * access the response when this call returns. It&apos;s messy but it works.
+ * 
+ * This MUST be fixed. Note: It didn&apos;t use to do this - it worked, then stopped.
+ * 
+ */
+globalMap.put(&apos;__OE_HTTP_RESULT&apos;, httpResponse);
+return;</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <shutdownScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</shutdownScript>
+</channel>

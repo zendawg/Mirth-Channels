@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1368116551674</time>
+    <time>1370358547165</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>19</revision>
+  <revision>99</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -18,7 +18,6 @@
       <property name="binary">0</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="directory"></property>
       <property name="fileAge">1000</property>
       <property name="fileFilter">*.xml</property>
       <property name="host">_OE_VFA_TEXT_IN_</property>
@@ -29,7 +28,6 @@
       <property name="passive">1</property>
       <property name="password">anonymous</property>
       <property name="pollingFrequency">1000</property>
-      <property name="pollingTime">12:00 AM</property>
       <property name="pollingType">interval</property>
       <property name="processBatchFiles">0</property>
       <property name="regex">0</property>
@@ -581,46 +579,36 @@ dE5hbWU+CjwvdmZhPg==</outboundTemplate>
   </sourceConnector>
   <destinationConnectors>
     <connector>
-      <name>Destination 1</name>
+      <name>Destination 2</name>
       <properties>
-        <property name="DataType">Database Writer</property>
-        <property name="URL">_OE_DB_URL</property>
-        <property name="driver">_OE_DB_DRIVER_</property>
-        <property name="host">query</property>
-        <property name="password">_OE_DB_PASSWORD_</property>
-        <property name="query"></property>
+        <property name="DataType">JavaScript Writer</property>
+        <property name="host">sink</property>
         <property name="script">var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), $(&apos;originalFilename&apos;));
-var fileId = getFileId(f);
+var fileId = addFile(f);
 
-var dbConn = getDbConnection();
+var size = f.length();
+fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), f, null, null, size, -1);
 
 var data = new XML(messageObject.getTransformedData());
-var sql = &quot;INSERT INTO &quot;
-	+ globalMap.get(&apos;OE_DB_SERVICE_BUS_VFA_XML_INFO&apos;)
-	+ &quot; (file_id, pid, eye, gender, birth_date, study_date, study_time, given_name, middle_name, family_name, file_name, test_strategy, test_name)&quot;
-    + &quot; VALUES (&quot; +  fileId + &quot;, &apos;&quot; 
-	+ data[&apos;pid&apos;] + &quot;&apos;&quot; + &quot;,&quot;
-    + &quot;&apos;&quot; + data[&apos;eye&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;gender&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;birthDate&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;studyDate&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;studyTime&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;givenName&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;middleName&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;familyName&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;fileReference&apos;] + &quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;testStrategy&apos;] +&quot;&apos;,&quot;
-    + &quot;&apos;&quot; + data[&apos;testName&apos;] + &quot;&apos;)&quot;
 
-try {
-	var result = dbConn.executeUpdate(sql);
-} catch(err) {
-	log(channelId, &quot;error&quot;, err);
-} finally {
-	dbConn.close();
+var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, &apos;created_date file_id pid eye gender birth_date study_date study_time given_name middle_name family_name file_name test_strategy test_name&apos;.split(&apos; &apos;),
+						[createdDate, fileId, data[&apos;pid&apos;], data[&apos;eye&apos;], data[&apos;gender&apos;], data[&apos;birthDate&apos;], data[&apos;studyDate&apos;], data[&apos;studyTime&apos;], data[&apos;givenName&apos;], data[&apos;middleName&apos;], data[&apos;familyName&apos;], data[&apos;fileReference&apos;], data[&apos;testStrategy&apos;], data[&apos;testName&apos;] ]));
+
+if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+
+	var filename = channelMap.get(&quot;originalFilename&quot;);
+
+	var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
+	var systime = new java.util.Date().getTime();
+	var fout = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_OUT&apos;)), systime + &quot;-&quot; + filename);
+
+	fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
+} else {
+	// leave the file here? It could be that the server is down...
+	// TODO need to give this some thought
+	log(channelId, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
 }</property>
-        <property name="useScript">1</property>
-        <property name="username">_OE_DB_USER_</property>
       </properties>
       <transformer>
         <steps/>
@@ -636,7 +624,7 @@ try {
       <filter>
         <rules/>
       </filter>
-      <transportName>Database Writer</transportName>
+      <transportName>JavaScript Writer</transportName>
       <mode>DESTINATION</mode>
       <enabled>true</enabled>
       <version>2.2.1.5861</version>
@@ -656,24 +644,8 @@ try {
   <preprocessingScript>// Modify the message variable below to pre process data
 message = message.replace(&quot;&lt;CZM-XML xmlns=\&quot;http://www.meditec.zeiss.com/czm\&quot; xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot; xsi:schemaLocation=\&quot;http://www.meditec.zeiss.com/CZM-XML-Root.xsd\&quot;&gt;&quot;, &quot;&lt;CZM-XML&gt;&quot;);
 
-var filename = muleContext.getMessage().getProperty(&quot;originalFilename&quot;);
-
-var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
-var size = f.length();
-
-var fileId = addFile(f);
-
-fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), f, null, null, size, -1);
 return message;</preprocessingScript>
-  <postprocessingScript>var filename = channelMap.get(&quot;originalFilename&quot;);
-
-var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
-var systime = new java.util.Date().getTime();
-var fout = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_OUT&apos;)), systime + &quot;-&quot; + filename);
-
-fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
-
-return;</postprocessingScript>
+  <postprocessingScript>return;</postprocessingScript>
   <deployScript>// This script executes once when the channel is deployed
 // You only have access to the globalMap and globalChannelMap here to persist data
 return;</deployScript>

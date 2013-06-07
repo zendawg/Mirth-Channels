@@ -1,5 +1,36 @@
 <list>
   <codeTemplate>
+    <id>c06d901d-75c7-4ae4-acb7-7f64e7964662</id>
+    <name>routeModel</name>
+    <tooltip></tooltip>
+    <code>/**
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+function routeModel(operation, json) {
+	var channelName = null;
+	if (operation == &apos;view&apos;) {
+		channelName = &apos;_OE_DB_NAME_-core-model-reader&apos;;
+	} else if (operation == &apos;search&apos;) {
+		channelName = &apos;_OE_DB_NAME_-core-model-searcher&apos;;
+	} else if (operation == &apos;create&apos;) {
+		channelName = &apos;_OE_DB_NAME_-core-model-writer&apos;;
+	} else if (operation == &apos;update&apos;) {
+		channelName = &apos;_OE_DB_NAME_-core-model-updater&apos;;
+	}
+	var ack = router.routeMessage(channelName, json, false);
+	// should return ack but does not always seem to work - so return global variable
+	return globalMap.get(&apos;__OE_HTTP_RESULT&apos;);
+}</code>
+    <type>FUNCTION</type>
+    <scope>0</scope>
+    <version>2.2.1.5861</version>
+  </codeTemplate>
+  <codeTemplate>
     <id>4e7b7377-8c88-4009-8fde-fa03e6790e46</id>
     <name>log</name>
     <tooltip>Logs a message to the logger channel along with the specified details.</tooltip>
@@ -67,7 +98,7 @@ function buildFileUtilMessage(op, srcDir, srcFilename, destDir, destFilename) {
 		+ &quot;&lt;destDir&gt;&quot; + destDir + &quot;&lt;/destDir&gt;&quot;
 		+ &quot;&lt;fileName&gt;&quot; + srcFilename + &quot;&lt;/fileName&gt;&quot;
 		+ &quot;&lt;destFileName&gt;&quot; + destFilename + &quot;&lt;/destFileName&gt;&quot;
-		+ &quot;&lt;/fileOperation&gt;)&quot;
+		+ &quot;&lt;/fileOperation&gt;&quot;
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
@@ -155,6 +186,7 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 		columns = columns + &quot;, dest_child&quot;;
 		columnValues = columnValues + &quot;, &apos;&quot; + destChildId + &quot;&apos;&quot;
 	}
+/*
 	var sql = &quot;INSERT INTO &quot;
 		+ globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE_AUDIT&apos;)
 		+ &quot; (created_date, src_size, dest_size, operation, type&quot; + columns + &quot;)&quot;
@@ -185,6 +217,7 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 	} finally {
 		dbConn.close();
 	}
+*/
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
@@ -319,27 +352,25 @@ function scaleImage(srcImage, destImage, width, height) {
  * return - the patient&apos;s ID, if there is one; null otherwise.
  */
 function getPatientUniquePrefix(hosNum) {
-	var sql = &quot;SELECT count(*) from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_UID&apos;) + &quot; where pid=&apos;&quot; + hosNum + &quot;&apos;&quot;;
 	var prefix = &apos;undefined&apos;;
-	var dbConn = getDbConnection();
-	try {
-		var result = dbConn.executeCachedQuery(sql);
-		result.next();
-		// if we don&apos;t have it, assume first visit and create it:
-		if (0 == result.getInt(1)) {
-			sql = &apos;INSERT into &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_UID&apos;) + &apos; (pid) values (\&apos;&apos; + hosNum + &apos;\&apos;)&apos;;
-			log(channelId, &apos;info&apos;, &apos;No UID given for \&apos;&apos; + hosNum + &apos;\&apos;; patient\&apos;s first visit - creating UID&apos;);
-			result = dbConn.executeUpdate(sql);
-			log(channelId, &apos;info&apos;, &apos;UID successfully created with statement: &apos; + sql);
+	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;ScannedDocumentUid&apos;, [&apos;pid&apos;], [hosNum]));
+
+	if (ack.getMessage() != null) {
+		var returnState = ack.getMessage().toString();
+		if (returnState.substr(0,1) == &apos;[&apos;) {
+			var x = JSON.parse(ack.getMessage());
+			prefix = x[0].id;
+		} else {
+			var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;ScannedDocumentUid&apos;, [&apos;pid&apos;], [hosNum]));
+			
+			if (ack.getMessage() != null) {
+				var returnState = ack.getMessage().toString();
+				if (returnState.substr(0,1) == &apos;{&apos;) {
+					var x = JSON.parse(ack.getMessage());
+					prefix = x.id;
+				} 
+			}
 		}
-		sql = &quot;SELECT id from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_UID&apos;) + &quot; where pid=&apos;&quot; + hosNum + &quot;&apos;&quot;;
-		result = dbConn.executeCachedQuery(sql);
-		result.next();
-		prefix = result.getString(1);
-	} catch (err) {
-		log(channelId, &apos;error&apos;, &apos;Failed to execute query for statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
-	} finally {
-		dbConn.close();
 	}
 	return prefix;
 }</code>
@@ -363,11 +394,7 @@ function getPatientUniquePrefix(hosNum) {
  */
 function addFile(f) {
 		
-	/* Note - java.io.File.lastModified trims off time to 1 second for
-		for ext4 file systems. So we&apos;ll use the current time, which should
-		be unique for most installations... */
-	var currentTime = java.lang.System.currentTimeMillis();
-	addFileWithKey(f, currentTime);
+	addFileWithKey(f, null);
 	return getFileId(f);
 }</code>
     <type>FUNCTION</type>
@@ -389,27 +416,22 @@ function addFile(f) {
  */
 function addDirectory(dir) {
 	var path = dir.getAbsolutePath();
-	var sql = &quot;SELECT count(*) from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_DIRECTORY&apos;) + &quot; where path=&apos;&quot; + path + &quot;&apos;&quot;;
-	var dbConn = getDbConnection();
-	var result = null;
-	try {
-		result = dbConn.executeCachedQuery(sql);
-		result.next();
-		if (0 == result.getInt(1)) {
-			sql = &apos;INSERT into &apos;
-				+ globalMap.get(&apos;OE_DB_SERVICE_BUS_DIRECTORY&apos;)
-				+ &apos; (path, modified) values (\&apos;&apos;
-				+ path + &apos;\&apos;, &apos; + dir.lastModified() + &apos;)&apos;;
-			log(channelId, &apos;info&apos;, &apos;No existing directory entry for \&apos;&apos; + path + &apos;\&apos;; adding it.&apos;);
-			result = dbConn.executeUpdate(sql);
-			log(channelId, &apos;info&apos;, &apos;Directory successfully inserted with statement: &apos; + sql);
+
+	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
+
+	if (ack.getMessage() != null) {
+		var returnState = ack.getMessage().toString();
+		if (returnState.substr(0,1) == &apos;[&apos;) {
+			/*var x = JSON.parse(ack.getMessage());
+			if (x.length &gt; 0) {
+				log(channelId, &apos;info&apos;, &apos;JSON stringified: &apos; + x[0].path);
+			}*/
+		} else {		
+			// TODO Once again, what to do if server down? Need to ensure caller deals with -1 appropriately	
+			var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;, &apos;modified&apos;], [path, dir.lastModified()]));
 		}
-	} catch (ex) {
-		log(channelId, &apos;error&apos;, &quot;Failed to insert directory for statement &quot; + sql + &quot;, error: &quot; + ex);
-		
-	} finally {
-		dbConn.close();
 	}
+// if rest call failed, -1 returned - see TODO, above
 	return getDirectoryId(dir);
 }</code>
     <type>FUNCTION</type>
@@ -430,23 +452,21 @@ function addDirectory(dir) {
  * return the id, or -1 if it doesn&apos;t exist.
  */ 
 function getFileId(f) {
-	var dbConn = getDbConnection();
 	var fileId = -1;
 	var dir = f.getParentFile();
 	var dir_id = getDirectoryId(dir);
-	var sql = null;
-	try {
-		sql = &quot;SELECT id from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;) + &quot; where name=&apos;&quot; + f.getName()
-			+ &quot;&apos; AND modified=&quot; + f.lastModified() + &quot; AND length=&quot; + f.length()
-			+ &quot; AND dir_id=&quot; + dir_id;
-		var result = dbConn.executeCachedQuery(sql);
-		if (result.next()) {
-			fileId = result.getInt(1);
-		}
-	} catch(err) {
-		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
-	} finally {
-		dbConn.close();
+
+	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified length dir_id&apos;.split(&apos; &apos;),
+		[f.getName(), f.lastModified(), f.length(), dir_id]));
+
+	if (ack.getMessage() != null) {
+		var returnState = ack.getMessage().toString();
+		if (returnState.substr(0,1) == &apos;[&apos;) {
+			var x = JSON.parse(ack.getMessage());
+			if (x.length &gt; 0) {
+				fileId = x[0].id;
+			}
+		} 
 	}
 	return fileId;
 }</code>
@@ -472,17 +492,18 @@ function getDirectoryId(dir) {
 	if (dir != null) {
 		var path = dir.getAbsolutePath();
 		var dirId = -1;
-		var sql = null; 
-		try {
-			sql = &quot;SELECT id from &quot; + globalMap.get(&apos;OE_DB_SERVICE_BUS_DIRECTORY&apos;) + &quot; where path=&apos;&quot; + path + &quot;&apos;&quot;;
-			var result = dbConn.executeCachedQuery(sql);
-			if (result.next()) {
-				dirId = result.getInt(1);
-			}
-		} catch(err) {
-			log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
-		} finally {
-			dbConn.close();
+
+
+		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
+
+		if (ack.getMessage() != null) {
+			var returnState = ack.getMessage().toString();
+			if (returnState.substr(0,1) == &apos;[&apos;) {
+				var x = JSON.parse(ack.getMessage());
+				if (x.length &gt; 0) {
+					dirId = x[0].id;
+				}
+			} 
 		}
 	}
 	return dirId;
@@ -506,20 +527,14 @@ function getDirectoryId(dir) {
 function getFileKey(fileId) {
 	var fileKey = -1;
 
-	var dbConn = getDbConnection();
-	var sql = null;
-	try {
-		sql = &quot;SELECT chronological_key from &quot;
-			+ globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;)
-			+ &quot; where id=&quot; + fileId;
-		var result = dbConn.executeCachedQuery(sql);
-		if (result.next()) {
-			fileKey = result.getLong(1);
-		}
-	} catch(err) {
-		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
-	} finally {
-		dbConn.close();
+	var ack = routeModel(&apos;view&apos;, buildRoutableModel(fileId, &apos;FsFile&apos;));
+
+	if (ack.getMessage() != null) {
+		var returnState = ack.getMessage().toString();
+		if (returnState.substr(0,1) == &apos;{&apos;) {
+			var x = JSON.parse(ack.getMessage());
+			fileKey = x.id;
+		} 
 	}
 	return fileKey;
 }</code>
@@ -549,6 +564,7 @@ function getFileKey(fileId) {
  * 
  */
 function addFileWithKey(f, key) {
+
 	var dir = f.getParentFile();
 	var dir_id = addDirectory(dir);
 	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
@@ -558,17 +574,15 @@ function addFileWithKey(f, key) {
 		var length = f.length();
 		var name = f.getName();
 
-		var sql = &apos;INSERT into &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;)
-			+ &apos; (name, modified, created_date, length, chronological_key, dir_id) &apos;
-			+ &apos;values (\&apos;&apos;
-			+ f.getName() + &apos;\&apos;,&apos; + f.lastModified() + &apos; , \&apos;&apos; + createdDate + &apos;\&apos;,&apos; + f.length() + &apos;,&apos; + key + &apos;,&apos; + dir_id + &apos;)&apos;;
-		try {
-			var result = dbConn.executeUpdate(sql);
-			log(channelId, &apos;info&apos;, &apos;File successfully inserted with statement: &apos; + sql);
-		} catch(err) {
-			log(channelId, &apos;error&apos;, &apos;Failed to execute query: &apos; + sql + &quot;, error: &quot; + err);
-		} finally {
-			dbConn.close();
+		var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified created_date length chronological_key dir_id&apos;.split(&apos; &apos;),
+						[f.getName(), f.lastModified(), createdDate, f.length(), key, dir_id]))
+
+		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+			// TODO ... what to do?
+		} else {
+			// leave the file here? It could be that the server is down...
+			// TODO need to give this some thought
+			log(channelId, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
 		}
 	}
 	return getFileId(f);
@@ -595,22 +609,9 @@ function createAsset(name, title, description, mimetype, filesize, extension) {
 	var sql = null;
 	var assetId = -1;
 	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
-	try {
-		sql = &quot;insert into asset (name, title, description, mimetype, filesize, extension, created_date) values (&quot;
-			+ &quot;&apos;&quot; + name + &quot;&apos;, &apos;&quot; + title + &quot;&apos;, &apos;&quot; + description + &quot;&apos;, &quot;
-			+ &quot;&apos;&quot; +  mimetype + &quot;&apos;, &quot; + filesize + &quot;, &apos;&quot; + extension + &quot;&apos;, &apos;&quot; + createdDate + &quot;&apos;)&quot; ; 
-		var result = dbConn.executeUpdate(sql);
-		sql = &quot;select id from asset where created_date=&apos;&quot; + createdDate + &quot;&apos;&quot;;
-		var result = dbConn.executeCachedQuery(sql);
-		if (result.next()) {
-			assetId = result.getInt(1);
-log(channelId, &apos;info&apos;, &apos;Got &apos;+ assetId + &apos; from date &apos; + createdDate);
-		}
-	} catch(err) {
-		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
-	} finally {
-		dbConn.close();
-	}
+	var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;Asset&apos;, &apos;name title description mimetype filesize extension created_date&apos;.split(&apos; &apos;),
+		[name, title, description, mimetype, filesize, extension, createdDate]));
+	assetId = JSON.parse(ack.getMessage()).id;
 	return assetId;
 }</code>
     <type>FUNCTION</type>
@@ -635,77 +636,77 @@ function getCurrentDateTime() {
     <version>2.2.1.5861</version>
   </codeTemplate>
   <codeTemplate>
-    <id>6c16215b-611f-48fa-940d-29f80512a8f6</id>
-    <name>createEvent</name>
+    <id>f3b3c244-8d3e-4bfe-a1bf-cd372935185f</id>
+    <name>linkAssetWithFile</name>
     <tooltip></tooltip>
-    <code>
-function createEvent(pid, event_type_id, tablename, assetId, title, description) {
-
-	var dbConn = getDbConnection();
-	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
-
-	try {
-		sql = &apos;select id from patient where hos_num=\&apos;&apos; + pid + &apos;\&apos;&apos;;
-		
-		var result = dbConn.executeCachedQuery(sql);
-		var patient_id=-1;
-		if (result.next()) {
-			patient_id=result.getInt(1);
-		}
-
-		sql = &apos;select id from episode where legacy=1 and patient_id=&apos; + patient_id;
-		
-		result = dbConn.executeCachedQuery(sql);
-		var episode_id=-1;
-		if (result.next()) {
-			episode_id=result.getInt(1);
-		}
-		if (episode_id == -1) {
-			sql = &apos;insert into episode (patient_id, legacy, created_date, start_date) values (&apos;
-				+ patient_id + &apos;, 1, \&apos;&apos; + createdDate + &apos;\&apos;, \&apos;&apos; + createdDate + &apos;\&apos;)&apos;;
-	
-			var result = dbConn.executeUpdate(sql);
-			sql = &apos;select id from episode where patient_id=&apos; + patient_id + &apos; and created_date=\&apos;&apos; + createdDate + &apos;\&apos; and legacy=1&apos;;
-			result = dbConn.executeCachedQuery(sql);
-			if (result.next()) {
-				episode_id=result.getInt(1);
-			}
-		}	
-		sql = &apos;insert into event (episode_id, created_user_id, datetime, created_date, event_type_id) values (&apos;
-			+ episode_id + &apos;, 1, \&apos;&apos; + createdDate + &apos;\&apos;, \&apos;&apos; + createdDate + &apos;\&apos;, &apos; +  event_type_id + &apos;)&apos;;
-		var result = dbConn.executeUpdate(sql);
-		var sql = &apos;select id from event where created_date=\&apos;&apos; + createdDate + &apos;\&apos;&apos;;
-		var result = dbConn.executeCachedQuery(sql);
-		if (result.next()) {
-			var event_id = result.getInt(1);
-			sql = &apos;insert into &apos; + tablename + &apos; (event_id, asset_id, title, description) values (&apos;
-				+ event_id + &apos;, &apos; + assetId + &quot;, &apos;&quot; + title + &apos;\&apos;, \&apos;&apos; + description +  &apos;\&apos;)&apos;;
-			dbConn.executeUpdate(sql);
-		}
-	} catch(err) {
-		log(channelId, &apos;error&apos;, &quot;Failed to execute SQL: &quot; + sql + &quot;, error: &quot; + err);
-	} finally {
-		dbConn.close();
-	}
-
+    <code>/**
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+function linkAssetWithFile(assetId, fileId) {
+	routeModel(&apos;update&apos;, buildRoutableModel(assetId, &apos;Asset&apos;, [&apos;file_id&apos;], [fileId]));
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
     <version>2.2.1.5861</version>
   </codeTemplate>
   <codeTemplate>
-    <id>f3b3c244-8d3e-4bfe-a1bf-cd372935185f</id>
-    <name>linkAssetWithFile</name>
+    <id>7021cf20-49d6-4eb1-8fe1-d10689ddbbe6</id>
+    <name>buildRoutableModel</name>
+    <tooltip></tooltip>
+    <code>/**
+ * Creates necessary message data for sending to the model reader/writer/updater.
+ * Essentiall it is XML with root element &apos;model&apos;, child elements
+ * &apos;name&apos; for the class name of the model and &apos;json&apos; for
+ * the JSON used to create/update the object. The JSON should
+ * represent the attributes and their values to update.
+ * 
+ * @param id used for view/update only; null otherwise, gives
+ * the id to view/upddate.
+ * @param string the class name of the model to create.
+ * @param array column names for the properties to set.
+ * @param array column values, paired 1-1 with the column names.
+ * 
+ * @return a message containing the necessary XML/JSON for the
+ * model reader/writer/updater to recieve.
+ * 
+ */
+function buildRoutableModel(id, model, columns, values) {
+	var data = &apos;&lt;model&gt;&lt;name&gt;&apos; + model + &apos;&lt;/name&gt;&apos;;
+	if (id != null) {
+		data = data + &apos;&lt;id&gt;&apos; + id + &apos;&lt;/id&gt;&apos;;
+	}
+	if (columns != null) {
+		data = data + &apos;&lt;json&gt;{ &apos;;
+		for (i = 0; i &lt; columns.length - 1; i++) {
+			data = data + &apos;&quot;&apos; + columns[i] + &apos;&quot;: &quot;&apos; + values[i] + &apos;&quot;, &apos;;
+		}
+		data = data + &apos;&quot;&apos; + columns[values.length-1] + &apos;&quot;: &quot;&apos; + values[values.length-1] + &apos;&quot; }&lt;/json&gt;&apos;;
+	}
+	return data + &apos;&lt;/model&gt;&apos;;
+}</code>
+    <type>FUNCTION</type>
+    <scope>0</scope>
+    <version>2.2.1.5861</version>
+  </codeTemplate>
+  <codeTemplate>
+    <id>6ed19e4f-0164-4e6c-8690-2d8b777f9f14</id>
+    <name>createHumphreyImagePairEvent</name>
     <tooltip></tooltip>
     <code>// modify function_name and parameters as you wish.
 // one function per template is recommended. i.e.) create a new code template for each new function.
-function linkAssetWithFile(assetId, fileId) {
+function createHumphreyImagePairEvent(patient_id, tif_image_id, xml_id, test_strategy) {
+	var messageData = &quot;&lt;createHumphreyImagePairEvent&gt;&quot;
+	+ &quot;&lt;patient_id&gt;&quot; + patient_id + &quot;&lt;/patient_id&gt;&quot;
+	+ &quot;&lt;tif_file_id&gt;&quot; + tif_image_id + &quot;&lt;/tif_file_id&gt;&quot;
+	+ &quot;&lt;xml_id&gt;&quot; + xml_id + &quot;&lt;/xml_id&gt;&quot;
+	+ &quot;&lt;test_strategy&gt;&quot; + test_strategy + &quot;&lt;/test_strategy&gt;&quot;
+	+ &quot;&lt;/createHumphreyImagePairEvent&gt;&quot;;
 
-	dbConn = getDbConnection();
-	if (assetId &gt; -1 &amp;&amp; fileId &gt; -1) {
-		sql = &apos;update &apos; + globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE&apos;) + &apos; set asset_id=&apos; + assetId + &apos; where id=&apos; + fileId;
-		dbConn.executeUpdate(sql);
-	}
+	router.routeMessage(&apos;esb-rest-api&apos;, messageData, false);
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
