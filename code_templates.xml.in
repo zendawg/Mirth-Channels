@@ -14,13 +14,13 @@
 function routeModel(operation, json) {
 	var channelName = null;
 	if (operation == &apos;view&apos;) {
-		channelName = &apos;_OE_DB_NAME_-core-model-reader&apos;;
+		channelName = &apos;rest-api-model-reader&apos;;
 	} else if (operation == &apos;search&apos;) {
-		channelName = &apos;_OE_DB_NAME_-core-model-searcher&apos;;
+		channelName = &apos;rest-api-model-searcher&apos;;
 	} else if (operation == &apos;create&apos;) {
-		channelName = &apos;_OE_DB_NAME_-core-model-writer&apos;;
+		channelName = &apos;rest-api-model-writer&apos;;
 	} else if (operation == &apos;update&apos;) {
-		channelName = &apos;_OE_DB_NAME_-core-model-updater&apos;;
+		channelName = &apos;rest-api-model-updater&apos;;
 	}
 	var ack = router.routeMessage(channelName, json, false);
 	// should return ack but does not always seem to work - so return global variable
@@ -706,7 +706,7 @@ function createHumphreyImagePairEvent(patient_id, tif_image_id, xml_id, test_str
 	+ &quot;&lt;test_strategy&gt;&quot; + test_strategy + &quot;&lt;/test_strategy&gt;&quot;
 	+ &quot;&lt;/createHumphreyImagePairEvent&gt;&quot;;
 
-	router.routeMessage(&apos;esb-rest-api&apos;, messageData, false);
+	router.routeMessage(&apos;rest-api&apos;, messageData, false);
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
