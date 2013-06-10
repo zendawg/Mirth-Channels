@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370516856562</time>
+    <time>1370867596336</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>648</revision>
+  <revision>651</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
