@@ -706,7 +706,7 @@ function createHumphreyImagePairEvent(patient_id, tif_image_id, xml_id, test_str
 	+ &quot;&lt;test_strategy&gt;&quot; + test_strategy + &quot;&lt;/test_strategy&gt;&quot;
 	+ &quot;&lt;/createHumphreyImagePairEvent&gt;&quot;;
 
-	router.routeMessage(&apos;rest-api&apos;, messageData, false);
+	var ack = router.routeMessage(&apos;rest-api&apos;, messageData, false);
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
