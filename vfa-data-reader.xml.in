@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370358547165</time>
+    <time>1370958132734</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>100</revision>
+  <revision>110</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -18,7 +18,6 @@
       <property name="binary">0</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="directory"></property>
       <property name="fileAge">1000</property>
       <property name="fileFilter">*.xml</property>
       <property name="host">_OE_VFA_TEXT_IN_</property>
@@ -29,7 +28,6 @@
       <property name="passive">1</property>
       <property name="password">anonymous</property>
       <property name="pollingFrequency">1000</property>
-      <property name="pollingTime">12:00 AM</property>
       <property name="pollingType">interval</property>
       <property name="processBatchFiles">0</property>
       <property name="regex">0</property>
@@ -597,7 +595,7 @@ var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
 var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, &apos;created_date file_id pid eye gender birth_date study_date study_time given_name middle_name family_name file_name test_strategy test_name&apos;.split(&apos; &apos;),
 						[createdDate, fileId, data[&apos;pid&apos;], data[&apos;eye&apos;], data[&apos;gender&apos;], data[&apos;birthDate&apos;], data[&apos;studyDate&apos;], data[&apos;studyTime&apos;], data[&apos;givenName&apos;], data[&apos;middleName&apos;], data[&apos;familyName&apos;], data[&apos;fileReference&apos;], data[&apos;testStrategy&apos;], data[&apos;testName&apos;] ]));
 
-if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+if (ack.getMessage() != null) {
 
 	var filename = channelMap.get(&quot;originalFilename&quot;);
 
@@ -609,7 +607,7 @@ if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) 
 } else {
 	// leave the file here? It could be that the server is down...
 	// TODO need to give this some thought
-	log(channelId, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
+	log(channelId, &apos;info&apos;, &apos;Failed to create XML scan for file name &apos; + $(&apos;originalFilename&apos;));
 }</property>
       </properties>
       <transformer>
@@ -639,7 +637,7 @@ if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) 
     <property name="error_messages_only">false</property>
     <property name="initialState">started</property>
     <property name="max_message_age">-1</property>
-    <property name="store_messages">true</property>
+    <property name="store_messages">false</property>
     <property name="synchronous">true</property>
     <property name="transactional">false</property>
   </properties>

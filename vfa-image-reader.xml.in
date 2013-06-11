@@ -7,10 +7,10 @@ Note that this channel checks less often than is required; XML files should be p
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370514177119</time>
+    <time>1370958145401</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>91</revision>
+  <revision>92</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -20,7 +20,6 @@ Note that this channel checks less often than is required; XML files should be p
       <property name="binary">1</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="directory"></property>
       <property name="fileAge">20000</property>
       <property name="fileFilter">*.tif</property>
       <property name="host">_OE_VFA_TEXT_IN_</property>
@@ -31,7 +30,6 @@ Note that this channel checks less often than is required; XML files should be p
       <property name="passive">1</property>
       <property name="password">anonymous</property>
       <property name="pollingFrequency">1000</property>
-      <property name="pollingTime">12:00 AM</property>
       <property name="pollingType">interval</property>
       <property name="processBatchFiles">0</property>
       <property name="regex">0</property>
@@ -135,7 +133,7 @@ fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_
     <property name="error_messages_only">false</property>
     <property name="initialState">started</property>
     <property name="max_message_age">-1</property>
-    <property name="store_messages">true</property>
+    <property name="store_messages">false</property>
     <property name="synchronous">true</property>
     <property name="transactional">false</property>
   </properties>

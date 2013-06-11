@@ -78,6 +78,16 @@ globalMap.put(&apos;OE_DB_SERVICE_BUS_FILE&apos;, &apos;_OE_DB_SERVICE_BUS_FILE_
 globalMap.put(&apos;OE_DB_SERVICE_BUS_ASSET&apos;, &apos;asset&apos;);
 globalMap.put(&apos;OE_DB_SERVICE_BUS_DIRECTORY&apos;, &apos;_OE_DB_SERVICE_BUS_DIRECTORY_&apos;);
 
+// these are file/directory ID caches to save on REST calls:
+var cacheFiles = {};
+var cacheFilesList = [];
+globalMap.put(&apos;ID_FILE_CACHE&apos;, cacheFiles);
+globalMap.put(&apos;ID_FILE_CACHE_LIST&apos;, cacheFilesList);
+var cacheDirs = {};
+var cacheDirsList = [];
+globalMap.put(&apos;ID_DIR_CACHE&apos;, cacheDirs);
+globalMap.put(&apos;ID_DIR_CACHE_LIST&apos;, cacheDirsList);
+
 return;</string>
   </entry>
   <entry>

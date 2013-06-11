@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370867596336</time>
+    <time>1370958138934</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>651</revision>
+  <revision>658</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -84,6 +84,8 @@ filename=$(&apos;originalFilename&apos;)
 //var assetId = data[&apos;assetId&apos;]
 if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; filename.length() &gt; 0) {
 	var pid = null;
+	var objHumphreyXmlId = null;
+	var tifFileId = null;
 
 	// need to find the associated XML file that contains our meta-data:
 	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, [&apos;file_name&apos;], [filename]));
@@ -93,6 +95,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 			objHumphreyXml = searchResults[0];
 			// the search results will contain the PID of the patient for the image:
 			pid = objHumphreyXml.pid;
+			objHumphreyXmlId = objHumphreyXml.id;
 			// ... and the test strategy:
 			testStrategy = objHumphreyXml.test_strategy;
 		}
@@ -103,8 +106,6 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 			globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
 		return;
 	}
-	var objHumphreyXmlId = null;
-	var tifFileId = null;
 	// otherwise,
 	if (typeof pid === &apos;undefined&apos;) {
 		// throw an error and move the image to the holding directory - for some reason, the PID is missing:
@@ -159,17 +160,9 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		var ackImg = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyImage&apos;, [&apos;file_id&apos;, &apos;created_date&apos;], [getFileId(orig), createdDate]));
 		var humphreyImage = JSON.parse(ackImg.getMessage());
 
-		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, [&apos;file_name&apos;, &apos;pid&apos;], [filename, pid]));
-		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
-			var searchResults = JSON.parse(ack.getMessage());
-			if (searchResults.length &gt; 0) {
-				objHumphreyXmlId = searchResults[0].id;
-				var ack = routeModel(&apos;update&apos;, buildRoutableModel(searchResults[0].id, &apos;FsScanHumphreyXml&apos;, [&apos;tif_file_id&apos;], [getFileId(orig)]));
-				tifFileId = getFileId(orig);
-			}
-		}
-		var newFileId = getFileId(orig);
-		linkAssetWithFile(humphreyImage.asset_id, newFileId);
+		var ack = routeModel(&apos;update&apos;, buildRoutableModel(objHumphreyXmlId, &apos;FsScanHumphreyXml&apos;, [&apos;tif_file_id&apos;], [getFileId(orig)]));
+		tifFileId = getFileId(orig);
+		linkAssetWithFile(humphreyImage.asset_id, tifFileId);
 
 /********* END: CREATE MAIN ASSET &amp; FILE */
 		try {
@@ -276,7 +269,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
     <property name="error_messages_only">false</property>
     <property name="initialState">started</property>
     <property name="max_message_age">-1</property>
-    <property name="store_messages">true</property>
+    <property name="store_messages">false</property>
     <property name="synchronous">true</property>
     <property name="transactional">false</property>
   </properties>

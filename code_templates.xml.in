@@ -355,21 +355,21 @@ function getPatientUniquePrefix(hosNum) {
 	var prefix = &apos;undefined&apos;;
 	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;ScannedDocumentUid&apos;, [&apos;pid&apos;], [hosNum]));
 
-	if (ack.getMessage() != null) {
+	if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 		var returnState = ack.getMessage().toString();
 		if (returnState.substr(0,1) == &apos;[&apos;) {
 			var x = JSON.parse(ack.getMessage());
 			prefix = x[0].id;
-		} else {
-			var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;ScannedDocumentUid&apos;, [&apos;pid&apos;], [hosNum]));
-			
-			if (ack.getMessage() != null) {
-				var returnState = ack.getMessage().toString();
-				if (returnState.substr(0,1) == &apos;{&apos;) {
-					var x = JSON.parse(ack.getMessage());
-					prefix = x.id;
-				} 
-			}
+		}
+	} else {
+		var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;ScannedDocumentUid&apos;, [&apos;pid&apos;], [hosNum]));
+		
+		if (ack.getMessage() != null) {
+			var returnState = ack.getMessage().toString();
+			if (returnState.substr(0,1) == &apos;{&apos;) {
+				var x = JSON.parse(ack.getMessage());
+				prefix = x.id;
+			} 
 		}
 	}
 	return prefix;
@@ -418,18 +418,9 @@ function addDirectory(dir) {
 	var path = dir.getAbsolutePath();
 
 	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
-
-	if (ack.getMessage() != null) {
-		var returnState = ack.getMessage().toString();
-		if (returnState.substr(0,1) == &apos;[&apos;) {
-			/*var x = JSON.parse(ack.getMessage());
-			if (x.length &gt; 0) {
-				log(channelId, &apos;info&apos;, &apos;JSON stringified: &apos; + x[0].path);
-			}*/
-		} else {		
-			// TODO Once again, what to do if server down? Need to ensure caller deals with -1 appropriately	
-			var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;, &apos;modified&apos;], [path, dir.lastModified()]));
-		}
+	if (ack.getMessage() != null &amp;&amp; ack.getStatus() != &apos;SUCCESS&apos;) {
+		// TODO Once again, what to do if server down? Need to ensure caller deals with -1 appropriately	
+		var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;, &apos;modified&apos;], [path, dir.lastModified()]));
 	}
 // if rest call failed, -1 returned - see TODO, above
 	return getDirectoryId(dir);
@@ -456,17 +447,31 @@ function getFileId(f) {
 	var dir = f.getParentFile();
 	var dir_id = getDirectoryId(dir);
 
+	var fileCache = globalMap.get(&apos;ID_FILE_CACHE&apos;);
+	var fileCacheList = globalMap.get(&apos;ID_FILE_CACHE_LIST&apos;);
+		log(channelId, &apos;getdirectoryid&apos;, &apos;Cache size is &apos; + fileCacheList.length);	
+	if( fileCache[f.getAbsolutePath()] !== undefined ) {
+		fileId = fileCache[f.getAbsolutePath()];
+	}
+	if (fileId &lt; 0) {
 	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified length dir_id&apos;.split(&apos; &apos;),
 		[f.getName(), f.lastModified(), f.length(), dir_id]));
 
-	if (ack.getMessage() != null) {
+	if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 		var returnState = ack.getMessage().toString();
 		if (returnState.substr(0,1) == &apos;[&apos;) {
 			var x = JSON.parse(ack.getMessage());
 			if (x.length &gt; 0) {
 				fileId = x[0].id;
+				fileCache[f.getAbsolutePath()] = fileId;
+				fileCacheList.push(f.getAbsolutePath());
+				fileCacheList.push(fileCache[f.getAbsolutePath()]);
+				if (fileCacheList.length &gt; 10) {
+					delete fileCache[fileCacheList.shift()];
+				}
 			}
 		} 
+	}
 	}
 	return fileId;
 }</code>
@@ -493,18 +498,32 @@ function getDirectoryId(dir) {
 		var path = dir.getAbsolutePath();
 		var dirId = -1;
 
+		var dirCache = globalMap.get(&apos;ID_DIR_CACHE&apos;);
+		var dirCacheList = globalMap.get(&apos;ID_DIR_CACHE_LIST&apos;);
 
+		if( dirCache[path] !== undefined ) {
+			dirId = dirCache[path];
+		}
+
+		if (dirId &lt; 0) {
 		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
 
-		if (ack.getMessage() != null) {
+		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 			var returnState = ack.getMessage().toString();
 			if (returnState.substr(0,1) == &apos;[&apos;) {
 				var x = JSON.parse(ack.getMessage());
 				if (x.length &gt; 0) {
 					dirId = x[0].id;
+					dirCache[path] = dirId;
+					dirCacheList.push(path);
+					dirCacheList.push(dirCache[path]);
+					if (dirCacheList.length &gt; 10) {
+						delete dirCache[dirCacheList.shift()];
+					}
 				}
 			} 
 		}
+	}
 	}
 	return dirId;
 }</code>
