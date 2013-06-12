@@ -454,24 +454,25 @@ function getFileId(f) {
 		fileId = fileCache[f.getAbsolutePath()];
 	}
 	if (fileId &lt; 0) {
-	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified length dir_id&apos;.split(&apos; &apos;),
-		[f.getName(), f.lastModified(), f.length(), dir_id]));
+		// it&apos;s not cached so look for it:
+		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified length dir_id&apos;.split(&apos; &apos;),
+			[f.getName(), f.lastModified(), f.length(), dir_id]));
 
-	if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
-		var returnState = ack.getMessage().toString();
-		if (returnState.substr(0,1) == &apos;[&apos;) {
-			var x = JSON.parse(ack.getMessage());
-			if (x.length &gt; 0) {
-				fileId = x[0].id;
-				fileCache[f.getAbsolutePath()] = fileId;
-				fileCacheList.push(f.getAbsolutePath());
-				fileCacheList.push(fileCache[f.getAbsolutePath()]);
-				if (fileCacheList.length &gt; 10) {
-					delete fileCache[fileCacheList.shift()];
+		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+			var returnState = ack.getMessage().toString();
+			if (returnState.substr(0,1) == &apos;[&apos;) {
+				var x = JSON.parse(ack.getMessage());
+				if (x.length &gt; 0) {
+					fileId = x[0].id;
+					fileCache[f.getAbsolutePath()] = fileId;
+					fileCacheList.push(f.getAbsolutePath());
+					fileCacheList.push(fileCache[f.getAbsolutePath()]);
+					if (fileCacheList.length &gt; 10) {
+						delete fileCache[fileCacheList.shift()];
+					}
 				}
-			}
-		} 
-	}
+			} 
+		}
 	}
 	return fileId;
 }</code>
@@ -506,24 +507,25 @@ function getDirectoryId(dir) {
 		}
 
 		if (dirId &lt; 0) {
-		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
+			// it&apos;s not cached so look for it:
+			var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
 
-		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
-			var returnState = ack.getMessage().toString();
-			if (returnState.substr(0,1) == &apos;[&apos;) {
-				var x = JSON.parse(ack.getMessage());
-				if (x.length &gt; 0) {
-					dirId = x[0].id;
-					dirCache[path] = dirId;
-					dirCacheList.push(path);
-					dirCacheList.push(dirCache[path]);
-					if (dirCacheList.length &gt; 10) {
-						delete dirCache[dirCacheList.shift()];
+			if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+				var returnState = ack.getMessage().toString();
+				if (returnState.substr(0,1) == &apos;[&apos;) {
+					var x = JSON.parse(ack.getMessage());
+					if (x.length &gt; 0) {
+						dirId = x[0].id;
+						dirCache[path] = dirId;
+						dirCacheList.push(path);
+						dirCacheList.push(dirCache[path]);
+						if (dirCacheList.length &gt; 10) {
+							delete dirCache[dirCacheList.shift()];
+						}
 					}
-				}
-			} 
+				} 
+			}
 		}
-	}
 	}
 	return dirId;
 }</code>
