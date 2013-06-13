@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370958138934</time>
+    <time>1371118733489</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>658</revision>
+  <revision>670</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -109,7 +109,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 	// otherwise,
 	if (typeof pid === &apos;undefined&apos;) {
 		// throw an error and move the image to the holding directory - for some reason, the PID is missing:
-		log(channelId, &apos;error&apos;, &apos;PID was not defined in the associated XML file &apos; + objHumphreyXml.file_name + &apos;, ID:&apos; + id);
+		log(channelId, null, &apos;error&apos;, &apos;PID was not defined in the associated XML file &apos; + objHumphreyXml.file_name + &apos;, ID:&apos; + id);
 		fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + filename,
 			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + filename,
 			globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
@@ -117,7 +117,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		return;
 	} else if (typeof testStrategy === &apos;undefined&apos;) {
 		// throw an error and move the image to the holding directory - for some reason, the test strategy is missing:
-		log(channelId, &apos;error&apos;, &apos;Test Strategy was not defined in the associated XML file &apos; + objHumphreyXml.file_name + &apos;, ID:&apos; + id);
+		log(channelId, null, &apos;error&apos;, &apos;Test Strategy was not defined in the associated XML file &apos; + objHumphreyXml.file_name + &apos;, ID:&apos; + id);
 		fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + filename,
 			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + filename,
 			globalMap.get(&apos;OE_VFA_IMAGES_ERR&apos;));
@@ -142,14 +142,12 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 				&quot;mkdir&quot;, mkDestDir.getAbsolutePath(), null, null, null),
 				false);
 		} catch(err) {
-			log(channelId, &apos;error&apos;, &apos;Failed to create directory: &apos; + err);
+			log(channelId, null, &apos;error&apos;, &apos;Failed to create directory: &apos; + err);
 		}
 
 
 /********* START: CREATE MAIN ASSET &amp; FILE */
-		//var assetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, orig.length(), &quot;.tif&quot;);
 		var orig = new java.io.File(mkDestDir, filename);
-		//routeModel(&apos;update&apos;, buildRoutableModel(assetId, &apos;Asset&apos;, [&apos;name&apos;], [orig.getName()]));
 
 		fileLocationChange(&apos;move&apos;, imagesDir + &quot;/&quot; + filename,
 				mkDestDir.getAbsolutePath() + &quot;/&quot; + filename,
@@ -160,9 +158,9 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		var ackImg = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyImage&apos;, [&apos;file_id&apos;, &apos;created_date&apos;], [getFileId(orig), createdDate]));
 		var humphreyImage = JSON.parse(ackImg.getMessage());
 
-		var ack = routeModel(&apos;update&apos;, buildRoutableModel(objHumphreyXmlId, &apos;FsScanHumphreyXml&apos;, [&apos;tif_file_id&apos;], [getFileId(orig)]));
 		tifFileId = getFileId(orig);
-		linkAssetWithFile(humphreyImage.asset_id, tifFileId);
+		var ack = routeModel(&apos;update&apos;, buildRoutableModel(objHumphreyXmlId, &apos;FsScanHumphreyXml&apos;, [&apos;tif_file_id&apos;], [getFileId(orig)]));
+		var ack = routeModel(&apos;update&apos;, buildRoutableModel(humphreyImage.id, &apos;FsScanHumphreyImage&apos;, [&apos;xml_id&apos;], [objHumphreyXmlId]));
 
 /********* END: CREATE MAIN ASSET &amp; FILE */
 		try {
@@ -175,13 +173,13 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 				&quot;mkdir&quot;, mkDestDirThumbs.getAbsolutePath(), null, null, null),
 				false);
 		} catch (err) {
-			log(channelId, &apos;error&apos;, &apos;Failed to route message: &apos; + err)
+			log(channelId, null, &apos;error&apos;, &apos;Failed to route message: &apos; + err)
 		}
 		var imageutils = null;
 		try {
 			imageutils = new Packages._OE_JAVA_PACKAGE_.imageutils.ImageUtils();
 		} catch(err) {
-			log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
+			log(channelId, null, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
 			return;
 		}
 
@@ -189,13 +187,11 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 			// all TIF from here:
 		var subImage = new java.io.File(mkDestDirSubImages, filename);
 
-		var subImgAssetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/tiff&quot;, 10, &quot;tif&quot;);
 		try {
 			imageutils.subImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + filename,
 					1302, 520, 925, 834, mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + filename);
 			var subImage = new java.io.File(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + filename);
 			var fileId = addFileWithKey(subImage, getFileId(orig));
-			linkAssetWithFile(subImgAssetId, fileId);
 /********* END: CREATE SUB IMAGE ASSET &amp; FILE */
 
 			try {
@@ -203,25 +199,19 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 				fileAudit(&apos;t&apos;, &apos;f&apos;, mkDestDir, new java.io.File(mkDestDir, filename),
 						mkDestDirSubImages, new java.io.File(mkDestDirSubImages, filename), src.length(), subImage.length());
 			} catch(err) {
-				log(channelId, &quot;error&quot;, err);
+				log(channelId, null, &quot;error&quot;, err);
 			}
 		} catch(err) {
-				log(channelId, &quot;error&quot;, err);
+				log(channelId, null, &quot;error&quot;, err);
 		}
 
 /********* START: CREATE THUMB SUB IMAGE ASSET &amp; FILE */
 		var src = new java.io.File(mkDestDirSubImages, filename);
 		var dest = new java.io.File(mkDestDirThumbs, filename);
 
-		var scaleImgAssetId = createAsset(orig.getName(), &apos;VFA Image&apos;, &apos;Imported VFA scan&apos;, &quot;image/jpeg&quot;, 10, &quot;tif&quot;);
-		scaleImage(src.getAbsolutePath(), dest.getAbsolutePath(), width, height);
 		addFileWithKey(src, getFileId(orig));
-		addFileWithKey(dest, getFileId(orig));
+		scaleImage(getFileId(orig), src.getAbsolutePath(), dest.getAbsolutePath(), width, height);
 
-		//var scaledImage = new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + assetId + &quot;.tif&quot;);
-		//var assetFileId = getFileId(scaledImage);
-		var assetFileId = getFileId(dest);
-		linkAssetWithFile(scaleImgAssetId, assetFileId);
 /********* END: CREATE THUMB SUB IMAGE ASSET &amp; FILE */
 	}
 
@@ -235,7 +225,7 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 /********* END: INJECT EVENT */
 
 } else {
-	log(channelId, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +
+	log(channelId, null, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +
 		$(&apos;originalFilename&apos;) + &quot;&apos; in the destination mapping; moving to holding directory.&quot;);
 	fileLocationChange(&apos;move&apos;, globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;) + &quot;/&quot; + $(&apos;originalFilename&apos;),
 			globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &quot;/&quot; + $(&apos;originalFilename&apos;),

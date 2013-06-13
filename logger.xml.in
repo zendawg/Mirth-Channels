@@ -7,10 +7,10 @@ Channels access the global template function &apos;log&apos; in order to acheive
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370958054301</time>
+    <time>1371073578756</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>5</revision>
+  <revision>8</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -111,11 +111,36 @@ Channels access the global template function &apos;log&apos; in order to acheive
             </entry>
           </data>
         </step>
+        <step>
+          <sequenceNumber>4</sequenceNumber>
+          <name></name>
+          <script>tmp[&apos;function&apos;] = validate(msg[&apos;function&apos;].toString(), &apos;&apos;, new Array());</script>
+          <type>Message Builder</type>
+          <data class="map">
+            <entry>
+              <string>Variable</string>
+              <string>tmp[&apos;function&apos;]</string>
+            </entry>
+            <entry>
+              <string>DefaultValue</string>
+              <string></string>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;function&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
+            </entry>
+          </data>
+        </step>
       </steps>
-      <inboundTemplate encoding="base64">PGxvZz4KICA8Y2hhbm5lbE5hbWU+PC9jaGFubmVsTmFtZT4KICA8bGV2ZWw+PC9sZXZlbD4KICA8
-bWVzc2FnZT48L21lc3NhZ2U+CjwvbG9nPg==</inboundTemplate>
-      <outboundTemplate encoding="base64">PGxvZz4KICA8Y2hhbm5lbE5hbWU+PC9jaGFubmVsTmFtZT4KICA8ZGF0ZT48L2RhdGU+CiAgPGxl
-dmVsPjwvbGV2ZWw+CiAgPG1lc3NhZ2U+PC9tZXNzYWdlPgo8L2xvZz4=</outboundTemplate>
+      <inboundTemplate encoding="base64">PGxvZz4KICA8Y2hhbm5lbE5hbWU+PC9jaGFubmVsTmFtZT4KICA8ZnVuY3Rpb24+PC9mdW5jdGlv
+bj4KICA8bGV2ZWw+PC9sZXZlbD4KICA8bWVzc2FnZT48L21lc3NhZ2U+CjwvbG9nPg==</inboundTemplate>
+      <outboundTemplate encoding="base64">PGxvZz4KICA8Y2hhbm5lbE5hbWU+PC9jaGFubmVsTmFtZT4KICA8ZnVuY3Rpb24+PC9mdW5jdGlv
+bj4KICA8ZGF0ZT48L2RhdGU+CiAgPGxldmVsPjwvbGV2ZWw+CiAgPG1lc3NhZ2U+PC9tZXNzYWdl
+Pgo8L2xvZz4=</outboundTemplate>
       <inboundProtocol>XML</inboundProtocol>
       <outboundProtocol>XML</outboundProtocol>
       <inboundProperties>
@@ -182,7 +207,7 @@ dmVsPjwvbGV2ZWw+CiAgPG1lc3NhZ2U+PC9tZXNzYWdlPgo8L2xvZz4=</outboundTemplate>
     <property name="error_messages_only">false</property>
     <property name="initialState">started</property>
     <property name="max_message_age">-1</property>
-    <property name="store_messages">false</property>
+    <property name="store_messages">true</property>
     <property name="synchronous">true</property>
     <property name="transactional">false</property>
   </properties>

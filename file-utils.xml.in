@@ -7,10 +7,10 @@ The process of file modification/creation is audited.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370958044222</time>
+    <time>1371074165554</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>30</revision>
+  <revision>31</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -243,7 +243,7 @@ var fileData = &quot;Operation: &quot;+ operation + &quot;, Source directory: &q
 
 var destFile = new java.io.File(new java.io.File(destDir), destFilename);
 if (destFile.exists() &amp;&amp; destFile.isFile()) {
-	log(channelId, &quot;error&quot;, &quot;Failure to perform operation &apos;&quot; + operation
+	log(channelId, null, &quot;error&quot;, &quot;Failure to perform operation &apos;&quot; + operation
 			+ &quot;&apos;; file already exists: &apos;&quot; + destFile.getAbsolutePath() + &quot;&apos;&quot;);
 	return;
 }
@@ -266,9 +266,9 @@ if (operation == &apos;move&apos;) {
 	try {
 		var moved = src.renameTo(f);
 		if (moved == &apos;false&apos;) {
-			log(channelId, &apos;error&apos;, &quot;Failed to move file: &quot; + fileData)
+			log(channelId, null, &apos;error&apos;, &quot;Failed to move file: &quot; + fileData)
 		} else {
-			log(channelId, &apos;info&apos;, &quot;Success moving: &quot; + fileData);
+			log(channelId, null, &apos;info&apos;, &quot;Success moving: &quot; + fileData);
 			var type = &apos;d&apos;;
 			if (!f.isDirectory()) {
 				addFileWithKey(f, fileKey);
@@ -279,7 +279,7 @@ if (operation == &apos;move&apos;) {
 			fileAudit(&apos;m&apos;, type, src.getParentFile(), src, f.getParentFile(), f, size, f.length());
 		}
 	} catch(err) {
-		log(channelId, &apos;error&apos;, &quot;Error moving file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);		
+		log(channelId, null, &apos;error&apos;, &quot;Error moving file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);		
 	}
 } else if (operation == &apos;copy&apos;) {
 	try {
@@ -298,24 +298,24 @@ if (operation == &apos;move&apos;) {
 
 		inp.close();
 		outp.close();
-		log(channelId, &apos;info&apos;, &quot;Success: &quot; + fileData);
+		log(channelId, null, &apos;info&apos;, &quot;Success: &quot; + fileData);
 		addFileWithKey(new java.io.File(dest, destFileName), fileKey);
 	    fileAudit(&apos;c&apos;, &apos;f&apos;, src.getParentFile(), src, dest.getParentFile(), dest, src.length(), dest.length());
 		
 	} catch (err) {
-		log(channelId, &apos;error&apos;, &quot;Error copying file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
+		log(channelId, null, &apos;error&apos;, &quot;Error copying file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
 	}
 } else if (operation == &apos;mkdir&apos;) {
 	try {
 		var src = new java.io.File(srcDir);
 		// TODO AUDIT THIS! CLEAN IT UP!
 		mkdirs(src);
-		log(channelId, &apos;info&apos;, &quot;Success: &quot; + fileData);
+		log(channelId, null, &apos;info&apos;, &quot;Success: &quot; + fileData);
 	} catch (err) {
-		log(channelId, &apos;error&apos;, &quot;Error copying file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
+		log(channelId, null, &apos;error&apos;, &quot;Error copying file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
 	}
 } else {
-	log(channelId, &apos;error&apos;, &apos;No such file operation: \&apos;&apos; + operation + &apos;\&apos;&apos;);
+	log(channelId, null, &apos;error&apos;, &apos;No such file operation: \&apos;&apos; + operation + &apos;\&apos;&apos;);
 }
 return;
 
@@ -335,12 +335,12 @@ function mkdirs(dirs) {
 		mkdirs(parent);
 		try {
 			dirs.mkdir();		
-			log(channelId, &apos;info&apos;, &quot;Directory &apos;&quot; + dirs.getAbsolutePath()
+			log(channelId, null, &apos;info&apos;, &quot;Directory &apos;&quot; + dirs.getAbsolutePath()
 				+ &quot;&apos; wasn&apos;t present; created successfully&quot;);
 			addDirectory(new java.io.File(dirs.getParentFile(), dirs.getName()));
 	    	fileAudit(&apos;i&apos;, &apos;d&apos;, dirs.getParentFile().getAbsolutePath(), dirs.getName(), null, null, dirs.length());
 		} catch(err) {
-			log(channelId, &apos;error&apos;, &quot;Error making directory: &quot; + err + &quot; (&quot; + dirs.getAbsolutePath() + &quot;)&quot;);		
+			log(channelId, null, &apos;error&apos;, &quot;Error making directory: &quot; + err + &quot; (&quot; + dirs.getAbsolutePath() + &quot;)&quot;);		
 		}
 	}
 }</postprocessingScript>

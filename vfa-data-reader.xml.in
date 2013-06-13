@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370958132734</time>
+    <time>1371074019847</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>110</revision>
+  <revision>114</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -584,6 +584,7 @@ dE5hbWU+CjwvdmZhPg==</outboundTemplate>
         <property name="DataType">JavaScript Writer</property>
         <property name="host">sink</property>
         <property name="script">var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), $(&apos;originalFilename&apos;));
+log(channelId, null, &apos;asda&apos;, &apos;about to add &apos; + f.getName());
 var fileId = addFile(f);
 
 var size = f.length();
@@ -607,7 +608,7 @@ if (ack.getMessage() != null) {
 } else {
 	// leave the file here? It could be that the server is down...
 	// TODO need to give this some thought
-	log(channelId, &apos;info&apos;, &apos;Failed to create XML scan for file name &apos; + $(&apos;originalFilename&apos;));
+	log(channelId, null, &apos;info&apos;, &apos;Failed to create XML scan for file name &apos; + $(&apos;originalFilename&apos;));
 }</property>
       </properties>
       <transformer>
@@ -637,7 +638,7 @@ if (ack.getMessage() != null) {
     <property name="error_messages_only">false</property>
     <property name="initialState">started</property>
     <property name="max_message_age">-1</property>
-    <property name="store_messages">false</property>
+    <property name="store_messages">true</property>
     <property name="synchronous">true</property>
     <property name="transactional">false</property>
   </properties>

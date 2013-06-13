@@ -52,14 +52,18 @@ function routeModel(operation, json) {
  * 
  * channelIdentifier - the ID of the source channel.
  * level - the logging level, as a text string.
+ * functionName - the name fo the function, if called from a code template.
  * text - the text of the message.
  * 
  */
-function log(channelIdentifier, level, text) {
+function log(channelIdentifier, functionName, level, text) {
 	var channelName = Packages.com.mirth.connect.server.controllers.ChannelController.getInstance().getDeployedChannelById(channelIdentifier).getName();
     var messageDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss:SSS&quot;);
-    var xmlMessage = &quot;&lt;log&gt;&lt;date&gt;&quot; + messageDate + &quot;&lt;/date&gt;&lt;channelName&gt;&quot;
-                     + channelName + &quot;&lt;/channelName&gt;&lt;level&gt;&quot; 
+    var xmlMessage = &quot;&lt;log&gt;&lt;date&gt;&quot; + messageDate + &quot;&lt;/date&gt;&quot;;
+	if (functionName != null) {
+		xmlMessage += &quot;&lt;function&gt;&quot; + functionName + &quot;&lt;/function&gt;&quot;;
+	}
+    xmlMessage += &quot;&lt;channelName&gt;&quot; + channelName + &quot;&lt;/channelName&gt;&lt;level&gt;&quot; 
                      + level.toUpperCase() + &quot;&lt;/level&gt;&lt;message&gt;&quot;
                      + text + &quot;&lt;/message&gt;&lt;/log&gt;&quot;;
 	router.routeMessage(&quot;logger&quot;, xmlMessage);
@@ -164,10 +168,27 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 	if (destSize == undefined || destSize &lt; 0) {
 		destSize = null;
 	}
-	var srcParentId = getDirectoryId(srcParent);
-	var destParentId = getDirectoryId(destParent);
-	var srcChildId = getDirectoryId(srcChild);
-	var destChildId = getDirectoryId(destChild);
+	var srcParentId = 0;
+	if (srcParent != null) {
+		srcParentId = getDirectoryId(srcParent);
+	}
+	var destParentId = 0;
+	if (destParentId != null) {
+		destParentId = getDirectoryId(destParent);
+	}
+	var srcChildId = 0;
+	if (srcChild != null &amp;&amp; srcChild.isDirectory()) {
+		srcChildId = getDirectoryId(srcChild);
+	} else if (srcChild != null) {
+		srcChildId = getFileId(srcChild);
+	}
+	var destChildId = 0;
+	if (destChild != null &amp;&amp; destChild.isDirectory()) {
+		destChildId = getDirectoryId(destChild);
+	} else if (destChild != null) {
+		destChildId = getFileId(destChild);
+	}
+log(channelId, &apos;fileAudit&apos;, &apos;info&apos;, &apos;dest child id=&apos; + destChildId);
 	var columns = &quot;&quot;;
 	var columnValues = &quot;&quot;;
 	if (srcParentId &gt; -1) {
@@ -186,7 +207,7 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 		columns = columns + &quot;, dest_child&quot;;
 		columnValues = columnValues + &quot;, &apos;&quot; + destChildId + &quot;&apos;&quot;
 	}
-/*
+
 	var sql = &quot;INSERT INTO &quot;
 		+ globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE_AUDIT&apos;)
 		+ &quot; (created_date, src_size, dest_size, operation, type&quot; + columns + &quot;)&quot;
@@ -200,8 +221,8 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 	try {
 		var result = dbConn.executeUpdate(sql);
 		try {
-    	    log(channelId, &quot;info&quot;, sql);
-    	    log(channelId, &quot;info&quot;, &quot;Audit: operation=&quot; + operation 
+    	    log(channelId, &apos;fileAudit&apos;, &quot;info&quot;, sql);
+    	    log(channelId, &apos;fileAudit&apos;, &quot;info&quot;, &quot;Audit: operation=&quot; + operation 
 				+ &quot;, type=&quot; + type
 				+ &quot;, src(parent)=&quot; + srcParent 
 				+ &quot;, src(child)=&quot; + srcChild 
@@ -210,14 +231,13 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 				+ &quot;, srcSize=&quot; + srcSize 
 				+ &quot;, destSize=&quot; + destSize);
 		} catch (err) {
-			log(channelId, &apos;error&apos;, &apos;Audit failure; failed to log audit information: &apos; + err);
+			log(channelId, &apos;fileAudit&apos;, &apos;error&apos;, &apos;Audit failure; failed to log audit information: &apos; + err);
 		}
 	} catch (err) {
-		log(channelId, &apos;error&apos;, &apos;Audit failure; failed to execute audit statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
+		log(channelId, &apos;fileAudit&apos;, &apos;error&apos;, &apos;Audit failure; failed to execute audit statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
 	} finally {
 		dbConn.close();
 	}
-*/
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
@@ -285,7 +305,7 @@ function fileLocationChange(operation, src, dest, errDest) {
 		router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
 			operation, srcDir.getAbsolutePath(), src.getName(), errDestDir.getAbsolutePath(), timeFilename),
 			false);
-		log(channelId, &apos;error&apos;, &apos;Destination file exists; moving &apos; + src + &apos; to &apos; + errDest + &quot;/&quot; + timeFilename);
+		log(channelId, &apos;fileLocationChange&apos;, &apos;error&apos;, &apos;Destination file exists; moving &apos; + src + &apos; to &apos; + errDest + &quot;/&quot; + timeFilename);
 		return;
 	}
 }</code>
@@ -301,18 +321,19 @@ function fileLocationChange(operation, src, dest, errDest) {
  * Scales the specified source image to the given destination image,
  * width and height. The process of file modification/creation is audited.
  * 
+ * key - the file&apos;s key
  * srcImage - the source image to scale; must exist and be a valid image format;
  * destImage - the (non-existant) file to scale the image to;
  * width - the width, in pixels, of the scaled image;
  * height - the height, in pixels, of the scaled image
  * 
  */
-function scaleImage(srcImage, destImage, width, height) {
+function scaleImage(key, srcImage, destImage, width, height) {
 	var imageutils = null;
 	try {
 		imageutils = new Packages._OE_JAVA_PACKAGE_.imageutils.ImageUtils();
 	} catch(err) {
-		log(channelId, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
+		log(channelId, &apos;scaleImage&apos;, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
 		return;
 	}
 
@@ -322,16 +343,15 @@ function scaleImage(srcImage, destImage, width, height) {
 	var destImageDir = destImageFile.getParentFile();
 	try {
 		imageutils.scale(srcImage, width, height, destImage);
+		addFileWithKey(destImage, key);
 		try {
 			fileAudit(&apos;t&apos;, &apos;f&apos;, srcImageDir, srcImageFile, destImageDir, destImageFile, srcImageFile.length(), destImageFile.length());
-			log(channelId, &quot;info&quot;, &quot;Image &quot;
-					+ srcImage + &quot; scaled to : &quot; + destImage);
 		}
 		catch(err) {
-			log(channelId, &quot;error&quot;, err);
+			log(channelId, &apos;scaleImage&apos;, &quot;error&quot;, err);
 		}
 	} catch(err) {
-		log(channelId, &quot;error&quot;, &quot;Library invocation failure scaling image: &quot; + err
+		log(channelId, &apos;scaleImage&apos;, &quot;error&quot;, &quot;Library invocation failure scaling image: &quot; + err
 			+ &quot;; src=&quot; + srcImage + &quot;, dest=&quot; + destImage + &quot;, width=&quot; + width + &quot;, height=&quot; + height);
 	}
 }</code>
@@ -449,7 +469,6 @@ function getFileId(f) {
 
 	var fileCache = globalMap.get(&apos;ID_FILE_CACHE&apos;);
 	var fileCacheList = globalMap.get(&apos;ID_FILE_CACHE_LIST&apos;);
-		log(channelId, &apos;getdirectoryid&apos;, &apos;Cache size is &apos; + fileCacheList.length);	
 	if( fileCache[f.getAbsolutePath()] !== undefined ) {
 		fileId = fileCache[f.getAbsolutePath()];
 	}
@@ -458,6 +477,8 @@ function getFileId(f) {
 		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified length dir_id&apos;.split(&apos; &apos;),
 			[f.getName(), f.lastModified(), f.length(), dir_id]));
 
+    	    log(channelId, &apos;getfileid&apos;, &quot;info&quot;, &apos;searching for: &apos; + f.getAbsolutePath() + &apos;, &apos; + f.getName() + &apos;, &apos; + f.lastModified() + &apos;, &apos; + f.length() + &apos;, &apos; + dir_id);
+			log(channelId, &apos;getfileid&apos;, &quot;info&quot;, &apos;message results: &apos; + ack.getStatus() + &apos;, &apos; +  + ack.getMessage());
 		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 			var returnState = ack.getMessage().toString();
 			if (returnState.substr(0,1) == &apos;[&apos;) {
@@ -467,7 +488,7 @@ function getFileId(f) {
 					fileCache[f.getAbsolutePath()] = fileId;
 					fileCacheList.push(f.getAbsolutePath());
 					fileCacheList.push(fileCache[f.getAbsolutePath()]);
-					if (fileCacheList.length &gt; 10) {
+					if (fileCacheList.length &gt; 20) {
 						delete fileCache[fileCacheList.shift()];
 					}
 				}
@@ -495,9 +516,9 @@ function getFileId(f) {
  */ 
 function getDirectoryId(dir) {
 	var dbConn = getDbConnection();
+	var dirId = -1;
 	if (dir != null) {
 		var path = dir.getAbsolutePath();
-		var dirId = -1;
 
 		var dirCache = globalMap.get(&apos;ID_DIR_CACHE&apos;);
 		var dirCacheList = globalMap.get(&apos;ID_DIR_CACHE_LIST&apos;);
@@ -508,7 +529,7 @@ function getDirectoryId(dir) {
 
 		if (dirId &lt; 0) {
 			// it&apos;s not cached so look for it:
-			var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
+			var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;, &apos;modified&apos;], [path, dir.lastModified()]));
 
 			if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 				var returnState = ack.getMessage().toString();
@@ -519,7 +540,7 @@ function getDirectoryId(dir) {
 						dirCache[path] = dirId;
 						dirCacheList.push(path);
 						dirCacheList.push(dirCache[path]);
-						if (dirCacheList.length &gt; 10) {
+						if (dirCacheList.length &gt; 20) {
 							delete dirCache[dirCacheList.shift()];
 						}
 					}

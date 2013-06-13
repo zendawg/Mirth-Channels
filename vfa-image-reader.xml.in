@@ -7,10 +7,10 @@ Note that this channel checks less often than is required; XML files should be p
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1370958145401</time>
+    <time>1371110448167</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>92</revision>
+  <revision>104</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -20,7 +20,7 @@ Note that this channel checks less often than is required; XML files should be p
       <property name="binary">1</property>
       <property name="charsetEncoding">DEFAULT_ENCODING</property>
       <property name="checkFileAge">1</property>
-      <property name="fileAge">20000</property>
+      <property name="fileAge">10000</property>
       <property name="fileFilter">*.tif</property>
       <property name="host">_OE_VFA_TEXT_IN_</property>
       <property name="ignoreDot">1</property>
@@ -102,7 +102,7 @@ ICA8YXNzZXRJZD52YWx1ZTQ8L2Fzc2V0SWQ+CjwvdmZhSW1hZ2U+</outboundTemplate>
 var size = f.length();
 
 var fileId = addFile(f);
-log(channelId, &apos;debug&apos;, &apos;Added file &apos; + f.getAbsolutePath());
+log(channelId, null, &apos;debug&apos;, &apos;Added file &apos; + f.getAbsolutePath());
 
 fileAudit(&apos;i&apos;, &apos;f&apos;, new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_IN&apos;)), f, null, null, f.length(), -1);</property>
       </properties>
