@@ -215,7 +215,7 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 		columns = columns + &quot; dest_child&quot;;
 		columnValues = columnValues + &quot; &quot; + destChildId
 	}
-log(channelId, &apos;fileAudit&apos;, &apos;info&apos;, &quot;&apos;&quot; + columns + &quot;&apos; &apos;&quot; + columnValues + &quot;&apos;&quot;);
+
 	var columnNames = [&quot;created_date&quot;, &quot;src_size&quot;, &quot;dest_size&quot;, &quot;operation&quot;, &quot;type&quot;];
 	var columnVals = [&quot;&apos;&quot; + (now.getYear()+1900) + &quot;-&quot; + (now.getMonth()+1) + &quot;-&quot; + now.getDate() + &quot; &quot; + now.getHours() + &quot;:&quot; + now.getMinutes() + &quot;:&quot; + now.getSeconds() + &quot;&apos;&quot;,
 		srcSize,
@@ -224,37 +224,6 @@ log(channelId, &apos;fileAudit&apos;, &apos;info&apos;, &quot;&apos;&quot; + col
     	type];
 	routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsFileAudit&apos;, columnNames.concat(columns.trim().split(&apos; &apos;)),
 																	columnVals.concat(columnValues.trim().split(&apos; &apos;))));
-
-	/*var sql = &quot;INSERT INTO &quot;
-		+ globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE_AUDIT&apos;)
-		+ &quot; (created_date, src_size, dest_size, operation, type&quot; + columns + &quot;)&quot;
-    	+ &quot; VALUES (&apos;&quot; +
-// TODO getYear is deprecated, but getFullYear fails - sort out js version/libs
-		(now.getYear()+1900) + &quot;-&quot; + (now.getMonth()+1) + &quot;-&quot; + now.getDate() + &quot; &quot; + now.getHours() + &quot;:&quot; + now.getMinutes() + &quot;:&quot; + now.getSeconds() + &quot;&apos;, &quot;
-		+ srcSize + &quot;, &quot;
-		+ destSize + &quot;, &apos;&quot;
-		+ operation + &quot;&apos;,&apos;&quot;
-    	+ type + &quot;&apos;&quot; + columnValues + &quot;)&quot;
-	try {
-		var result = dbConn.executeUpdate(sql);
-		try {
-    	    log(channelId, &apos;fileAudit&apos;, &quot;info&quot;, sql);
-    	    log(channelId, &apos;fileAudit&apos;, &quot;info&quot;, &quot;Audit: operation=&quot; + operation 
-				+ &quot;, type=&quot; + type
-				+ &quot;, src(parent)=&quot; + srcParent 
-				+ &quot;, src(child)=&quot; + srcChild 
-				+ &quot;, dest(parent)=&quot; + destParent 
-				+ &quot;, dest(child)=&quot; + destChild 
-				+ &quot;, srcSize=&quot; + srcSize 
-				+ &quot;, destSize=&quot; + destSize);
-		} catch (err) {
-			log(channelId, &apos;fileAudit&apos;, &apos;error&apos;, &apos;Audit failure; failed to log audit information: &apos; + err);
-		}
-	} catch (err) {
-		log(channelId, &apos;fileAudit&apos;, &apos;error&apos;, &apos;Audit failure; failed to execute audit statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
-	} finally {
-		dbConn.close();
-	}*/
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
