@@ -66,6 +66,8 @@ globalMap.put(&apos;OE_VFA_IMAGES_HOLDING&apos;, &apos;_OE_VFA_IMAGES_HOLDING_&a
 globalMap.put(&apos;OE_VFA_TEXT_OUT&apos;, &apos;_OE_VFA_TEXT_OUT_&apos;);
 // location for VFA error files:
 globalMap.put(&apos;OE_VFA_TEXT_ERR&apos;, &apos;_OE_VFA_IMAGES_ERR_&apos;);
+// location for VFA trash files that will be deleted - this is typically from subimage extraction etc.:
+globalMap.put(&apos;OE_VFA_TRASH&apos;, &apos;/var/_OE_DB_NAME_/vfa-trash&apos;);
 
 /* DB-related variables */
 globalMap.put(&apos;OE_DB_SERVICE_BUS_DISC_FILES&apos;, &apos;_OE_DB_SERVICE_BUS_DISC_FILES_&apos;);

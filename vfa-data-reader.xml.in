@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1371074019847</time>
+    <time>1371494065369</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>114</revision>
+  <revision>206</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -55,12 +55,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patient_id&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patient_id&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -79,12 +79,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_name&apos;][&apos;family_name&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -103,12 +103,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_name&apos;][&apos;given_name&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -127,12 +127,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>RegularExpressions</string>
-              <list/>
-            </entry>
-            <entry>
               <string>Mapping</string>
               <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_name&apos;][&apos;middle_name&apos;].toString()</string>
+            </entry>
+            <entry>
+              <string>RegularExpressions</string>
+              <list/>
             </entry>
           </data>
         </step>
@@ -151,12 +151,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_birth_date&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_birth_date&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -175,12 +175,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_sex&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;Patient_M&apos;][&apos;patients_sex&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -199,12 +199,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;ReferencedImage_M&apos;][&apos;file_reference&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;ReferencedImage_M&apos;][&apos;file_reference&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -223,12 +223,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralStudy_M&apos;][&apos;study_date&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralStudy_M&apos;][&apos;study_date&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -247,12 +247,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralStudy_M&apos;][&apos;study_time&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralStudy_M&apos;][&apos;study_time&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -271,12 +271,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralSeries_M&apos;][&apos;laterality&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;GeneralSeries_M&apos;][&apos;laterality&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -295,12 +295,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_strategy&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_strategy&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -319,12 +319,12 @@
               <string></string>
             </entry>
             <entry>
-              <string>Mapping</string>
-              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_name&apos;].toString()</string>
-            </entry>
-            <entry>
               <string>RegularExpressions</string>
               <list/>
+            </entry>
+            <entry>
+              <string>Mapping</string>
+              <string>msg[&apos;DataSet&apos;][&apos;CZM_HFA_EMR_IOD&apos;][&apos;CZM_HFA_Series_M&apos;][&apos;test_name&apos;].toString()</string>
             </entry>
           </data>
         </step>
@@ -602,9 +602,25 @@ if (ack.getMessage() != null) {
 
 	var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
 	var systime = new java.util.Date().getTime();
-	var fout = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_OUT&apos;)), systime + &quot;-&quot; + filename);
-
-	fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
+	var path = globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;)  + &quot;/&quot; + data[&apos;testStrategy&apos;] + &quot;/&quot; + getPatientUniquePrefix(data[&apos;pid&apos;]);
+	var fout = new java.io.File(path);
+	
+	try {
+		// create the test directory (and all parent directories) where images will be stored:
+		router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
+			&quot;mkdir&quot;, fout.getAbsolutePath(), null, null, null),
+			false);
+	} catch(err) {
+		log(channelId, null, &apos;error&apos;, &apos;Failed to create directory: &apos; + err);
+	}
+	var dirId = getDirectoryId(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;)));
+	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, [&apos;name&apos;, &apos;dir_id&apos;], [data[&apos;fileReference&apos;], dirId]));
+	if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+		router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
+			&quot;move&quot;, globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;), data[&apos;fileReference&apos;], globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;), data[&apos;fileReference&apos;]),
+			false);
+	}
+	fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath() + &apos;/&apos; + filename, globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
 } else {
 	// leave the file here? It could be that the server is down...
 	// TODO need to give this some thought

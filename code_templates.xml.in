@@ -168,47 +168,64 @@ function fileAudit(operation, type, srcParent, srcChild, destParent, destChild, 
 	if (destSize == undefined || destSize &lt; 0) {
 		destSize = null;
 	}
-	var srcParentId = 0;
+	var srcParentId = -1;
 	if (srcParent != null) {
 		srcParentId = getDirectoryId(srcParent);
 	}
-	var destParentId = 0;
+	var destParentId = -1;
 	if (destParentId != null) {
 		destParentId = getDirectoryId(destParent);
 	}
-	var srcChildId = 0;
+	var srcChildId = -1;
 	if (srcChild != null &amp;&amp; srcChild.isDirectory()) {
 		srcChildId = getDirectoryId(srcChild);
 	} else if (srcChild != null) {
 		srcChildId = getFileId(srcChild);
 	}
-	var destChildId = 0;
+	var destChildId = -1;
 	if (destChild != null &amp;&amp; destChild.isDirectory()) {
 		destChildId = getDirectoryId(destChild);
 	} else if (destChild != null) {
 		destChildId = getFileId(destChild);
 	}
-log(channelId, &apos;fileAudit&apos;, &apos;info&apos;, &apos;dest child id=&apos; + destChildId);
+
 	var columns = &quot;&quot;;
 	var columnValues = &quot;&quot;;
 	if (srcParentId &gt; -1) {
-		columns = columns + &quot;, src_parent&quot;;
-		columnValues = columnValues + &quot;, &apos;&quot; + srcParentId + &quot;&apos;&quot;
+		//columns = columns + &quot;, src_parent&quot;;
+		//columnValues = columnValues + &quot;, &apos;&quot; + srcParentId + &quot;&apos;&quot;
+		columns = columns + &quot; src_parent&quot;;
+		columnValues = columnValues + &quot; &quot; + srcParentId
 	}
 	if (destParentId &gt; -1) {
-		columns = columns + &quot;, dest_parent&quot;;
-		columnValues = columnValues + &quot;, &apos;&quot; +destParentId + &quot;&apos;&quot;
+		//columns = columns + &quot;, dest_parent&quot;;
+		//columnValues = columnValues + &quot;, &apos;&quot; +destParentId + &quot;&apos;&quot;
+		columns = columns + &quot; dest_parent&quot;;
+		columnValues = columnValues + &quot; &quot; +destParentId
 	}
 	if (srcChildId &gt; -1) {
-		columns = columns + &quot;, src_child&quot;;
-		columnValues = columnValues + &quot;, &apos;&quot; + srcChildId + &quot;&apos;&quot;
+		//columns = columns + &quot;, src_child&quot;;
+		//columnValues = columnValues + &quot;, &apos;&quot; + srcChildId + &quot;&apos;&quot;
+		columns = columns + &quot; src_child&quot;;
+		columnValues = columnValues + &quot; &quot; + srcChildId
 	}
 	if (destChildId &gt; -1) {
-		columns = columns + &quot;, dest_child&quot;;
-		columnValues = columnValues + &quot;, &apos;&quot; + destChildId + &quot;&apos;&quot;
+		//columns = columns + &quot;, dest_child&quot;;
+		//dcolumnValues = columnValues + &quot;, &apos;&quot; + destChildId + &quot;&apos;&quot;
+		columns = columns + &quot; dest_child&quot;;
+		columnValues = columnValues + &quot; &quot; + destChildId
 	}
+log(channelId, &apos;fileAudit&apos;, &apos;info&apos;, &quot;&apos;&quot; + columns + &quot;&apos; &apos;&quot; + columnValues + &quot;&apos;&quot;);
+	var columnNames = [&quot;created_date&quot;, &quot;src_size&quot;, &quot;dest_size&quot;, &quot;operation&quot;, &quot;type&quot;];
+	var columnVals = [&quot;&apos;&quot; + (now.getYear()+1900) + &quot;-&quot; + (now.getMonth()+1) + &quot;-&quot; + now.getDate() + &quot; &quot; + now.getHours() + &quot;:&quot; + now.getMinutes() + &quot;:&quot; + now.getSeconds() + &quot;&apos;&quot;,
+		srcSize,
+		destSize,
+		operation,
+    	type];
+	routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsFileAudit&apos;, columnNames.concat(columns.trim().split(&apos; &apos;)),
+																	columnVals.concat(columnValues.trim().split(&apos; &apos;))));
 
-	var sql = &quot;INSERT INTO &quot;
+	/*var sql = &quot;INSERT INTO &quot;
 		+ globalMap.get(&apos;OE_DB_SERVICE_BUS_FILE_AUDIT&apos;)
 		+ &quot; (created_date, src_size, dest_size, operation, type&quot; + columns + &quot;)&quot;
     	+ &quot; VALUES (&apos;&quot; +
@@ -237,7 +254,7 @@ log(channelId, &apos;fileAudit&apos;, &apos;info&apos;, &apos;dest child id=&apo
 		log(channelId, &apos;fileAudit&apos;, &apos;error&apos;, &apos;Audit failure; failed to execute audit statement \&apos;&apos; + sql + &apos;\&apos;: &apos; + err);
 	} finally {
 		dbConn.close();
-	}
+	}*/
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>
@@ -343,7 +360,7 @@ function scaleImage(key, srcImage, destImage, width, height) {
 	var destImageDir = destImageFile.getParentFile();
 	try {
 		imageutils.scale(srcImage, width, height, destImage);
-		addFileWithKey(destImage, key);
+		addFileWithKey(destImageFile, key);
 		try {
 			fileAudit(&apos;t&apos;, &apos;f&apos;, srcImageDir, srcImageFile, destImageDir, destImageFile, srcImageFile.length(), destImageFile.length());
 		}
@@ -476,9 +493,6 @@ function getFileId(f) {
 		// it&apos;s not cached so look for it:
 		var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified length dir_id&apos;.split(&apos; &apos;),
 			[f.getName(), f.lastModified(), f.length(), dir_id]));
-
-    	    log(channelId, &apos;getfileid&apos;, &quot;info&quot;, &apos;searching for: &apos; + f.getAbsolutePath() + &apos;, &apos; + f.getName() + &apos;, &apos; + f.lastModified() + &apos;, &apos; + f.length() + &apos;, &apos; + dir_id);
-			log(channelId, &apos;getfileid&apos;, &quot;info&quot;, &apos;message results: &apos; + ack.getStatus() + &apos;, &apos; +  + ack.getMessage());
 		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 			var returnState = ack.getMessage().toString();
 			if (returnState.substr(0,1) == &apos;[&apos;) {
@@ -515,7 +529,6 @@ function getFileId(f) {
  * The id, if the entry for the directory exists; -1 otherwise.
  */ 
 function getDirectoryId(dir) {
-	var dbConn = getDbConnection();
 	var dirId = -1;
 	if (dir != null) {
 		var path = dir.getAbsolutePath();
@@ -529,7 +542,7 @@ function getDirectoryId(dir) {
 
 		if (dirId &lt; 0) {
 			// it&apos;s not cached so look for it:
-			var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;, &apos;modified&apos;], [path, dir.lastModified()]));
+			var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsDirectory&apos;, [&apos;path&apos;], [path]));
 
 			if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 				var returnState = ack.getMessage().toString();
@@ -609,6 +622,7 @@ function addFileWithKey(f, key) {
 
 	var dir = f.getParentFile();
 	var dir_id = addDirectory(dir);
+	var fileId = -1;
 	var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
 	if (getFileId(f) &lt; 0) {
 		var dbConn = getDbConnection();
@@ -621,13 +635,14 @@ function addFileWithKey(f, key) {
 
 		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 			// TODO ... what to do?
+			fileId = JSON.parse(ack.getMessage()).id;
 		} else {
 			// leave the file here? It could be that the server is down...
 			// TODO need to give this some thought
 			log(channelId, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
 		}
 	}
-	return getFileId(f);
+	return fileId;
 }</code>
     <type>FUNCTION</type>
     <scope>0</scope>

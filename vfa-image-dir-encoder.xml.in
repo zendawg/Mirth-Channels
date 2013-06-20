@@ -7,10 +7,10 @@ All encoding is done using MD5 hash.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1371118733489</time>
+    <time>1371664780176</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>670</revision>
+  <revision>696</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -132,21 +132,17 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		// this is where the thumbnail of the image will be created:
 		var mkDestDir = new java.io.File(imagesDir  + &quot;/&quot; + testStrategy + &quot;/&quot; + encodedDir);
 		// where sub-images will go - in this case the main image in the TIF:
-		var mkDestDirSubImages = new java.io.File(mkDestDir, &apos;subimages&apos;);
-		// where sub image thumb images will go:
 		var mkDestDirThumbs = new java.io.File(mkDestDir, &apos;thumbs&apos;);
 	
 		try {
 			// create the test directory (and all parent directories) where images will be stored:		
 			router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
-				&quot;mkdir&quot;, mkDestDir.getAbsolutePath(), null, null, null),
+				&quot;mkdir&quot;, mkDestDirThumbs.getAbsolutePath(), null, null, null),
 				false);
 		} catch(err) {
 			log(channelId, null, &apos;error&apos;, &apos;Failed to create directory: &apos; + err);
 		}
 
-
-/********* START: CREATE MAIN ASSET &amp; FILE */
 		var orig = new java.io.File(mkDestDir, filename);
 
 		fileLocationChange(&apos;move&apos;, imagesDir + &quot;/&quot; + filename,
@@ -162,67 +158,25 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
 		var ack = routeModel(&apos;update&apos;, buildRoutableModel(objHumphreyXmlId, &apos;FsScanHumphreyXml&apos;, [&apos;tif_file_id&apos;], [getFileId(orig)]));
 		var ack = routeModel(&apos;update&apos;, buildRoutableModel(humphreyImage.id, &apos;FsScanHumphreyImage&apos;, [&apos;xml_id&apos;], [objHumphreyXmlId]));
 
-/********* END: CREATE MAIN ASSET &amp; FILE */
+		var subImage = new java.io.File(mkDestDirThumbs, filename);
+
 		try {
-			// create the thumbs directory (and all parent directories) where the thumbnail will be stored:		
-			router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
-				&quot;mkdir&quot;, mkDestDirSubImages.getAbsolutePath(), null, null, null),
-				false);
-			// create the thumbs directory (and all parent directories) where the thumbnail will be stored:		
-			router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
-				&quot;mkdir&quot;, mkDestDirThumbs.getAbsolutePath(), null, null, null),
-				false);
-		} catch (err) {
-			log(channelId, null, &apos;error&apos;, &apos;Failed to route message: &apos; + err)
-		}
-		var imageutils = null;
-		try {
+			var imageutils = null;
 			imageutils = new Packages._OE_JAVA_PACKAGE_.imageutils.ImageUtils();
-		} catch(err) {
-			log(channelId, null, &quot;error&quot;, &quot;Failed to load java library: org.statefive.imageutils.ImageUtils&quot;);
-			return;
-		}
-
-/********* START: CREATE SUB IMAGE ASSET &amp; FILE */
-			// all TIF from here:
-		var subImage = new java.io.File(mkDestDirSubImages, filename);
-
-		try {
-			imageutils.subImage(mkDestDir.getAbsolutePath() + &quot;/&quot; + filename,
-					1302, 520, 925, 834, mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + filename);
-			var subImage = new java.io.File(mkDestDirSubImages.getAbsolutePath() + &quot;/&quot; + filename);
+			imageutils.createVisualFieldSubimage(mkDestDir.getAbsolutePath() + &quot;/&quot; + filename,
+					1302, 520, 925, 834, width, height, mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + filename);
+			var subImage = new java.io.File(mkDestDirThumbs.getAbsolutePath() + &quot;/&quot; + filename);
 			var fileId = addFileWithKey(subImage, getFileId(orig));
-/********* END: CREATE SUB IMAGE ASSET &amp; FILE */
-
-			try {
-				var src = new java.io.File(mkDestDir, filename);
-				fileAudit(&apos;t&apos;, &apos;f&apos;, mkDestDir, new java.io.File(mkDestDir, filename),
-						mkDestDirSubImages, new java.io.File(mkDestDirSubImages, filename), src.length(), subImage.length());
-			} catch(err) {
-				log(channelId, null, &quot;error&quot;, err);
-			}
 		} catch(err) {
 				log(channelId, null, &quot;error&quot;, err);
 		}
-
-/********* START: CREATE THUMB SUB IMAGE ASSET &amp; FILE */
-		var src = new java.io.File(mkDestDirSubImages, filename);
-		var dest = new java.io.File(mkDestDirThumbs, filename);
-
-		addFileWithKey(src, getFileId(orig));
-		scaleImage(getFileId(orig), src.getAbsolutePath(), dest.getAbsolutePath(), width, height);
-
-/********* END: CREATE THUMB SUB IMAGE ASSET &amp; FILE */
 	}
 
-/********* START: INJECT EVENT */
 
-	// add event - requires tif file id
 	// only do this if we know we&apos;ve got the patient and the humphrey XML has been bound to the image:
     if (!(typeof pid === &apos;undefined&apos;) &amp;&amp; !(typeof objHumphreyXmlId === &apos;undefined&apos;)) {
 		createHumphreyImagePairEvent(pid, tifFileId, objHumphreyXmlId, testStrategy);
 	}
-/********* END: INJECT EVENT */
 
 } else {
 	log(channelId, null, &quot;error&quot;, &quot;Filename for image was NULL; (given as &apos;&quot; +
@@ -256,10 +210,10 @@ if (filename != null &amp;&amp; filename != &apos;undefined&apos; &amp;&amp; fil
     <property name="clearGlobalChannelMap">true</property>
     <property name="dont_store_filtered">false</property>
     <property name="encryptData">false</property>
-    <property name="error_messages_only">false</property>
+    <property name="error_messages_only">true</property>
     <property name="initialState">started</property>
-    <property name="max_message_age">-1</property>
-    <property name="store_messages">false</property>
+    <property name="max_message_age">60</property>
+    <property name="store_messages">true</property>
     <property name="synchronous">true</property>
     <property name="transactional">false</property>
   </properties>

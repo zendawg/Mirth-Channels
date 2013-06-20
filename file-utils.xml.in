@@ -7,10 +7,10 @@ The process of file modification/creation is audited.</description>
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1371074165554</time>
+    <time>1371669682067</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>31</revision>
+  <revision>62</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -202,9 +202,9 @@ c3RGaWxlTmFtZT48L2Rlc3RGaWxlTmFtZT4KPC9maWxlT3BlcmF0aW9uPg==</outboundTemplate>
   <preprocessingScript>// Modify the message variable below to pre process data
 return message;</preprocessingScript>
   <postprocessingScript>/**
- * Prepare a file for moving or copying.
+ * Prepare a file for moving, copying or deleting.
  * An error will be reported if the &apos;operation&apos; element
- * is not one of &apos;move&apos;, &apos;copy&apos; or &apos;mkdir&apos;.
+ * is not one of &apos;move&apos;, &apos;copy&apos;, &apos;mkdir&apos; or &apos;delete&apos;.
  * The source directory and file name to copy from that
  * directory MUST exist. The destination directory&apos;
  * if it d_OE_DB_USER_s not exist, is created. If creation fails
@@ -217,6 +217,8 @@ return message;</preprocessingScript>
  * Any move or copy will fail if the destination file
  * exists; it is up to callers to move or delete the
  * destination file and audit the information.
+ * 
+ * Only source directory and file are required for delete.
  * 
  * Note that copying of directories is not catered for; the
  * copy operation is for files only.
@@ -268,7 +270,8 @@ if (operation == &apos;move&apos;) {
 		if (moved == &apos;false&apos;) {
 			log(channelId, null, &apos;error&apos;, &quot;Failed to move file: &quot; + fileData)
 		} else {
-			log(channelId, null, &apos;info&apos;, &quot;Success moving: &quot; + fileData);
+			log(channelId, null, &apos;info&apos;, fileData);
+			routeModel(&apos;update&apos;, buildRoutableModel(fileId, &apos;FsFile&apos;, [&apos;deleted&apos;], [&apos;1&apos;]));
 			var type = &apos;d&apos;;
 			if (!f.isDirectory()) {
 				addFileWithKey(f, fileKey);
@@ -277,6 +280,7 @@ if (operation == &apos;move&apos;) {
 				addDirectory(f);
 			}
 			fileAudit(&apos;m&apos;, type, src.getParentFile(), src, f.getParentFile(), f, size, f.length());
+			fileAudit(&apos;d&apos;, type, src.getParentFile(), src, null, null, size, null);
 		}
 	} catch(err) {
 		log(channelId, null, &apos;error&apos;, &quot;Error moving file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);		
@@ -298,7 +302,7 @@ if (operation == &apos;move&apos;) {
 
 		inp.close();
 		outp.close();
-		log(channelId, null, &apos;info&apos;, &quot;Success: &quot; + fileData);
+		log(channelId, null, &apos;info&apos;, fileData);
 		addFileWithKey(new java.io.File(dest, destFileName), fileKey);
 	    fileAudit(&apos;c&apos;, &apos;f&apos;, src.getParentFile(), src, dest.getParentFile(), dest, src.length(), dest.length());
 		
@@ -312,7 +316,16 @@ if (operation == &apos;move&apos;) {
 		mkdirs(src);
 		log(channelId, null, &apos;info&apos;, &quot;Success: &quot; + fileData);
 	} catch (err) {
-		log(channelId, null, &apos;error&apos;, &quot;Error copying file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
+		log(channelId, null, &apos;error&apos;, &quot;Error calling mkdir: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
+	}
+} else if (operation == &apos;delete&apos;) {
+	try {
+		var src = new java.io.File(srcDir);
+		// TODO AUDIT THIS! CLEAN IT UP!
+		FileUtil.deleteFile(new java.io.File(srcDir + &apos;/&apos; + filename));
+		log(channelId, null, &apos;info&apos;, &quot;Deleted: &quot; + fileData);
+	} catch (err) {
+		log(channelId, null, &apos;error&apos;, &quot;Error deleting file: &quot; + err + &quot; (&quot; + fileData + &quot;)&quot;);
 	}
 } else {
 	log(channelId, null, &apos;error&apos;, &apos;No such file operation: \&apos;&apos; + operation + &apos;\&apos;&apos;);
@@ -337,8 +350,8 @@ function mkdirs(dirs) {
 			dirs.mkdir();		
 			log(channelId, null, &apos;info&apos;, &quot;Directory &apos;&quot; + dirs.getAbsolutePath()
 				+ &quot;&apos; wasn&apos;t present; created successfully&quot;);
-			addDirectory(new java.io.File(dirs.getParentFile(), dirs.getName()));
-	    	fileAudit(&apos;i&apos;, &apos;d&apos;, dirs.getParentFile().getAbsolutePath(), dirs.getName(), null, null, dirs.length());
+			addDirectory(dirs);
+	    	fileAudit(&apos;i&apos;, &apos;d&apos;, dirs.getParentFile(), dirs, null, null, dirs.length(), null);
 		} catch(err) {
 			log(channelId, null, &apos;error&apos;, &quot;Error making directory: &quot; + err + &quot; (&quot; + dirs.getAbsolutePath() + &quot;)&quot;);		
 		}
