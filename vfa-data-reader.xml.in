@@ -5,10 +5,10 @@
   <enabled>true</enabled>
   <version>2.2.1.5861</version>
   <lastModified>
-    <time>1371494065369</time>
+    <time>1372337497869</time>
     <timezone>Europe/London</timezone>
   </lastModified>
-  <revision>206</revision>
+  <revision>213</revision>
   <sourceConnector>
     <name>sourceConnector</name>
     <properties>
@@ -596,9 +596,9 @@ var createdDate = DateUtil.getCurrentDate(&quot;yyyy-MM-dd HH:mm:ss&quot;);
 var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsScanHumphreyXml&apos;, &apos;created_date file_id pid eye gender birth_date study_date study_time given_name middle_name family_name file_name test_strategy test_name&apos;.split(&apos; &apos;),
 						[createdDate, fileId, data[&apos;pid&apos;], data[&apos;eye&apos;], data[&apos;gender&apos;], data[&apos;birthDate&apos;], data[&apos;studyDate&apos;], data[&apos;studyTime&apos;], data[&apos;givenName&apos;], data[&apos;middleName&apos;], data[&apos;familyName&apos;], data[&apos;fileReference&apos;], data[&apos;testStrategy&apos;], data[&apos;testName&apos;] ]));
 
+var filename = channelMap.get(&quot;originalFilename&quot;);
 if (ack.getMessage() != null) {
 
-	var filename = channelMap.get(&quot;originalFilename&quot;);
 
 	var f = new java.io.File(new java.io.File(globalMap.get(&apos;OE_VFA_TEXT_IN&apos;)), filename);
 	var systime = new java.util.Date().getTime();
@@ -616,6 +616,7 @@ if (ack.getMessage() != null) {
 	var dirId = getDirectoryId(new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;)));
 	var ack = routeModel(&apos;search&apos;, buildRoutableModel(null, &apos;FsFile&apos;, [&apos;name&apos;, &apos;dir_id&apos;], [data[&apos;fileReference&apos;], dirId]));
 	if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
+		// need to move the &apos;stuck&apos; TIF file in the holding directory to it&apos;s correct location:
 		router.routeMessage(&quot;file-utils&quot;, buildFileUtilMessage(
 			&quot;move&quot;, globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;), data[&apos;fileReference&apos;], globalMap.get(&apos;OE_VFA_IMAGES_OUT&apos;), data[&apos;fileReference&apos;]),
 			false);
@@ -624,7 +625,9 @@ if (ack.getMessage() != null) {
 } else {
 	// leave the file here? It could be that the server is down...
 	// TODO need to give this some thought
-	log(channelId, null, &apos;info&apos;, &apos;Failed to create XML scan for file name &apos; + $(&apos;originalFilename&apos;));
+	log(channelId, null, &apos;info&apos;, &apos;Failed to create XML scan for file name &apos; + filename);
+	var fout = new java.io.File(globalMap.get(&apos;OE_VFA_IMAGES_HOLDING&apos;) + &apos;/&apos; + filename);
+	fileLocationChange(&apos;move&apos;, f.getAbsolutePath(), fout.getAbsolutePath(), globalMap.get(&apos;OE_VFA_TEXT_ERR&apos;));
 }</property>
       </properties>
       <transformer>

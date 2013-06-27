@@ -601,14 +601,15 @@ function addFileWithKey(f, key) {
 
 		var ack = routeModel(&apos;create&apos;, buildRoutableModel(null, &apos;FsFile&apos;, &apos;name modified created_date length chronological_key dir_id&apos;.split(&apos; &apos;),
 						[f.getName(), f.lastModified(), createdDate, f.length(), key, dir_id]))
-
+log(channelId, &apos;addFileWithKey&apos;, &apos;info&apos;, ack);
+log(channelId, &apos;addFileWithKey&apos;, &apos;info&apos;, ack.getMessage());
 		if (ack.getMessage() != null &amp;&amp; ack.getStatus() == &apos;SUCCESS&apos;) {
 			// TODO ... what to do?
 			fileId = JSON.parse(ack.getMessage()).id;
 		} else {
 			// leave the file here? It could be that the server is down...
 			// TODO need to give this some thought
-			log(channelId, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
+			log(channelId, &apos;addFileWithKey&apos;, &apos;info&apos;, &apos;Failed - ACK message is NULL&apos;);
 		}
 	}
 	return fileId;
